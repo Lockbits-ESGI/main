@@ -1,0 +1,102 @@
+version: '3.8'
+
+# Déploiement production — tire les images depuis ghcr.io, aucun clone requis.
+# Usage :
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+
+services:
+
+  edr-server:
+    image: ghcr.io/lockbits-esgi/edr:latest
+    container_name: lockbits_edr
+    pull_policy: always
+    ports:
+      - "${EDR_PORT:-8000}:8000"
+    environment:
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8000"
+      DATABASE_URL: ${EDR_DATABASE_URL:-sqlite:///./miniedr.db}
+      AUTH_TOKEN: ${EDR_AUTH_TOKEN:-}
+      VT_ENABLED: ${VT_ENABLED:-false}
+      VT_API_KEY: ${VT_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - edr_data:/app/data
+    networks:
+      - lockbits_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  site-web:
+    image: ghcr.io/lockbits-esgi/site_lockbits:latest
+    container_name: lockbits_web
+    pull_policy: always
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    environment:
+      DB_HOST: site-db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-lockbits_client}
+      DB_USER: ${DB_USER:-lockbits}
+      DB_PASS: ${DB_PASS:-lockbits_password}
+      APP_NAME: ${APP_NAME:-LockBits Client Area}
+      APP_ENV: ${APP_ENV:-production}
+      GLPI_API_URL: ${GLPI_API_URL:-}
+      GLPI_WEB_URL: ${GLPI_WEB_URL:-}
+      GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
+      GLPI_USER_TOKEN: ${GLPI_USER_TOKEN:-}
+      GLPI_OAUTH_CLIENT_ID: ${GLPI_OAUTH_CLIENT_ID:-}
+      GLPI_OAUTH_CLIENT_SECRET: ${GLPI_OAUTH_CLIENT_SECRET:-}
+      GLPI_API_USERNAME: ${GLPI_API_USERNAME:-}
+      GLPI_API_PASSWORD: ${GLPI_API_PASSWORD:-}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
+    depends_on:
+      site-db:
+        condition: service_healthy
+    networks:
+      - lockbits_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  site-db:
+    image: mysql:8.0
+    container_name: lockbits_db
+    ports:
+      - "${DB_EXPOSE_PORT:-3307}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${DB_NAME:-lockbits_client}
+      MYSQL_USER: ${DB_USER:-lockbits}
+      MYSQL_PASSWORD: ${DB_PASS:-lockbits_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - lockbits_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mysql_data:
+    driver: local
+  edr_data:
+    driver: local
+
+networks:
+  lockbits_network:
+    driver: bridge
