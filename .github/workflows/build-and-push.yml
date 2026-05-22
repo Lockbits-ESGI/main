@@ -16,7 +16,6 @@ env:
 # ─────────────────────────────────────────────────────────────────────────────
 jobs:
 
-  # ── EDR — Unit tests (pytest) ────────────────────────────────────────────
   test-edr-unit:
     name: "EDR · Unit tests"
     runs-on: ubuntu-latest
@@ -41,7 +40,6 @@ jobs:
           DATABASE_URL: "sqlite:///:memory:"
           VT_ENABLED: "false"
 
-  # ── EDR — Integration smoke tests ────────────────────────────────────────
   test-edr-integration:
     name: "EDR · Integration smoke"
     runs-on: ubuntu-latest
@@ -66,10 +64,8 @@ jobs:
       - name: Wait for EDR to be ready
         run: |
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:8000/health > /dev/null; then
-              echo "EDR ready (attempt $i)"; break
-            fi
-            [ $i -eq 30 ] && { echo "Timeout"; docker logs edr-smoke; exit 1; }
+            curl -sf http://localhost:8000/health > /dev/null && echo "EDR ready" && break
+            [ $i -eq 30 ] && { docker logs edr-smoke; exit 1; }
             sleep 2
           done
 
@@ -87,7 +83,6 @@ jobs:
         if: always()
         run: docker rm -f edr-smoke || true
 
-  # ── Site — Smoke tests ────────────────────────────────────────────────────
   test-site-smoke:
     name: "Site · Smoke tests"
     runs-on: ubuntu-latest
@@ -104,7 +99,6 @@ jobs:
             -e MYSQL_DATABASE=lockbits_client \
             -e MYSQL_USER=lockbits \
             -e MYSQL_PASSWORD=lockbits_password \
-            -p 3306:3306 \
             mysql:8.0
 
       - name: Build site image
@@ -113,10 +107,8 @@ jobs:
       - name: Wait for MySQL
         run: |
           for i in $(seq 1 30); do
-            if docker exec ci-mysql mysqladmin ping -h localhost --silent 2>/dev/null; then
-              echo "MySQL ready (attempt $i)"; break
-            fi
-            [ $i -eq 30 ] && { echo "Timeout"; docker logs ci-mysql; exit 1; }
+            docker exec ci-mysql mysqladmin ping -h localhost --silent 2>/dev/null && echo "MySQL ready" && break
+            [ $i -eq 30 ] && { docker logs ci-mysql; exit 1; }
             sleep 2
           done
 
@@ -126,7 +118,7 @@ jobs:
             mysql -u lockbits -plockbits_password lockbits_client \
             < site_lockbits/client/database.sql
 
-      - name: Create network and start site
+      - name: Start site container
         run: |
           docker network create ci-net
           docker network connect ci-net ci-mysql --alias db
@@ -145,10 +137,8 @@ jobs:
       - name: Wait for site
         run: |
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:8080/ > /dev/null; then
-              echo "Site ready (attempt $i)"; break
-            fi
-            [ $i -eq 30 ] && { echo "Timeout"; docker logs site-smoke; exit 1; }
+            curl -sf http://localhost:8080/ > /dev/null && echo "Site ready" && break
+            [ $i -eq 30 ] && { docker logs site-smoke; exit 1; }
             sleep 2
           done
 
@@ -169,141 +159,21 @@ jobs:
         run: docker rm -f site-smoke ci-mysql || true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STAGE 2 — Build (per-platform, parallel matrix)
-#   Each job builds one platform and pushes by digest.
-#   Only runs on push to main (not PRs).
+# STAGE 2 — Build & Push  (push to main only)
 # ─────────────────────────────────────────────────────────────────────────────
 
   build-edr:
-    name: "EDR · Build ${{ matrix.platform }}"
+    name: "EDR · Build & Push"
     runs-on: ubuntu-latest
     needs: test-edr-integration
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [linux/amd64, linux/arm64]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push digest
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: ./edr
-          file: ./docker/edr/Dockerfile
-          platforms: ${{ matrix.platform }}
-          push: true
-          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.ORG }}/edr,push-by-digest=true,name-canonical=true
-          provenance: false
-          sbom: false
-          cache-from: type=gha,scope=edr-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=edr-${{ matrix.platform }}
-
-      - name: Export digest
-        run: |
-          mkdir -p /tmp/digests/edr
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/edr/${digest#sha256:}"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: edr-digest-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
-          path: /tmp/digests/edr/*
-          if-no-files-found: error
-          retention-days: 1
-
-  build-site:
-    name: "Site · Build ${{ matrix.platform }}"
-    runs-on: ubuntu-latest
-    needs: test-site-smoke
-    if: github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [linux/amd64, linux/arm64]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-
-      # GHCR_PAT required: site_lockbits package is owned by the site_lockbits
-      # repo. GITHUB_TOKEN from main cannot create manifests in a package owned
-      # by another repo even with GHCR package access settings — use a PAT with
-      # write:packages scope added as secret GHCR_PAT on this repo.
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
-
-      - name: Build and push digest
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          context: ./site_lockbits
-          file: ./site_lockbits/Dockerfile
-          platforms: ${{ matrix.platform }}
-          push: true
-          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits,push-by-digest=true,name-canonical=true
-          provenance: false
-          sbom: false
-          cache-from: type=gha,scope=site-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=site-${{ matrix.platform }}
-
-      - name: Export digest
-        run: |
-          mkdir -p /tmp/digests/site
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/site/${digest#sha256:}"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: site-digest-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
-          path: /tmp/digests/site/*
-          if-no-files-found: error
-          retention-days: 1
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STAGE 3 — Merge multi-arch manifests + attest
-# ─────────────────────────────────────────────────────────────────────────────
-
-  publish-edr:
-    name: "EDR · Publish manifest"
-    runs-on: ubuntu-latest
-    needs: build-edr
-    if: github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: /tmp/digests/edr
-          pattern: edr-digest-*
-          merge-multiple: true
 
       - uses: docker/setup-buildx-action@v3
 
@@ -320,48 +190,32 @@ jobs:
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Create and push multi-arch manifest
-        id: push
-        working-directory: /tmp/digests/edr
-        run: |
-          docker buildx imagetools create \
-            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY }}/${{ env.ORG }}/edr@sha256:%s ' *)
-
-      - name: Inspect manifest and capture digest
-        id: inspect
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.ORG }}/edr:latest
-          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.ORG }}/edr:latest \
-            | grep "^Digest:" | awk '{print $2}')
-          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
-
-      - name: Attest
-        uses: actions/attest-build-provenance@v1
+      - uses: docker/build-push-action@v6
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.ORG }}/edr
-          subject-digest: ${{ steps.inspect.outputs.digest }}
-          push-to-registry: true
+          context: ./edr
+          file: ./docker/edr/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          cache-from: type=gha,scope=edr
+          cache-to: type=gha,mode=max,scope=edr
 
-  publish-site:
-    name: "Site · Publish manifest"
+  build-site:
+    name: "Site · Build & Push"
     runs-on: ubuntu-latest
-    needs: build-site
+    needs: test-site-smoke
     if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
-      attestations: write
-      id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          path: /tmp/digests/site
-          pattern: site-digest-*
-          merge-multiple: true
+          submodules: recursive
 
       - uses: docker/setup-buildx-action@v3
 
@@ -369,7 +223,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: docker/metadata-action@v5
         id: meta
@@ -378,43 +232,16 @@ jobs:
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Create and push multi-arch manifest
-        id: push
-        working-directory: /tmp/digests/site
-        run: |
-          docker buildx imagetools create \
-            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits@sha256:%s ' *)
-
-      - name: Inspect manifest and capture digest
-        id: inspect
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits:latest
-          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits:latest \
-            | grep "^Digest:" | awk '{print $2}')
-          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
-
-      - name: Attest
-        uses: actions/attest-build-provenance@v1
+      - uses: docker/build-push-action@v6
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits
-          subject-digest: ${{ steps.inspect.outputs.digest }}
-          push-to-registry: true
-
-# ─────────────────────────────────────────────────────────────────────────────
-# STAGE 4 — Summary
-# ─────────────────────────────────────────────────────────────────────────────
-
-  summary:
-    name: "Summary"
-    runs-on: ubuntu-latest
-    needs: [publish-edr, publish-site]
-    if: github.event_name != 'pull_request'
-    steps:
-      - name: Images published
-        run: |
-          echo "ghcr.io/${{ env.ORG }}/edr:latest"
-          echo "ghcr.io/${{ env.ORG }}/site_lockbits:latest"
+          context: ./site_lockbits
+          file: ./site_lockbits/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+          cache-from: type=gha,scope=site
+          cache-to: type=gha,mode=max,scope=site
