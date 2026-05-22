@@ -1,0 +1,6 @@
+[submodule "edr"]
+	path = edr
+	url = https://github.com/Lockbits-ESGI/edr.git
+[submodule "site_lockbits"]
+	path = site_lockbits
+	url = https://github.com/Lockbits-ESGI/site_lockbits.git
