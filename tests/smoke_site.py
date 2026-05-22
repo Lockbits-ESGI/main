@@ -17,19 +17,18 @@ def run(base: str) -> None:
     assert "text/html" in r.headers.get("content-type", ""), "/ not HTML"
     print("✓ GET /")
 
-    # ── Login page ────────────────────────────────────────────────────────
-    r = s.get(f"{base}/login.php", timeout=TIMEOUT)
-    assert r.status_code == 200, f"GET /login.php → {r.status_code}"
-    assert "text/html" in r.headers.get("content-type", ""), "/login.php not HTML"
-    print("✓ GET /login.php")
+    # ── PHP app pages (under /client/) ────────────────────────────────────
+    r = s.get(f"{base}/client/login.php", timeout=TIMEOUT)
+    assert r.status_code == 200, f"GET /client/login.php → {r.status_code}"
+    assert "text/html" in r.headers.get("content-type", ""), "/client/login.php not HTML"
+    print("✓ GET /client/login.php")
 
-    # ── Register page ─────────────────────────────────────────────────────
-    r = s.get(f"{base}/register.php", timeout=TIMEOUT)
-    assert r.status_code == 200, f"GET /register.php → {r.status_code}"
-    print("✓ GET /register.php")
+    r = s.get(f"{base}/client/register.php", timeout=TIMEOUT)
+    assert r.status_code == 200, f"GET /client/register.php → {r.status_code}"
+    print("✓ GET /client/register.php")
 
     # ── Protected pages redirect to login when unauthenticated ───────────
-    for path in ("/dashboard.php", "/tickets.php"):
+    for path in ("/client/dashboard.php", "/client/tickets.php"):
         r = s.get(f"{base}{path}", timeout=TIMEOUT, allow_redirects=False)
         assert r.status_code in (200, 302), f"GET {path} → {r.status_code}"
         if r.status_code == 302:

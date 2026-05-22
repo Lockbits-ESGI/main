@@ -11,7 +11,7 @@ TIMEOUT = 10
 
 def run(base: str) -> None:
     s = requests.Session()
-    agent_id = f"ci-smoke-{uuid.uuid4().hex[:8]}"
+    agent_id = str(uuid.uuid4())
 
     # ── Health ────────────────────────────────────────────────────────────
     r = s.get(f"{base}/health", timeout=TIMEOUT)
