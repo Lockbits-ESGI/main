@@ -289,6 +289,18 @@ Pour désactiver :
 curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --no-cron
 ```
 
+### Mettre à jour les submodules (rebuild les images)
+
+Quand vous push sur `edr` ou `site_lockbits`, le repo principal ne voit pas les changements tant que la référence git du submodule n'est pas mise à jour. Pour le faire en une commande :
+
+```bash
+# Depuis le clone du repo principal (pas le serveur)
+git pull
+bash install.sh --update-sources
+```
+
+Cette commande met à jour tous les submodules, commit le changement de référence, et push — ce qui déclenche la CI et rebuild les images sur ghcr.io. Une fois les images rebuildées, mettez à jour le serveur avec `--update`.
+
 ---
 
 ## docker run (services indépendants)
@@ -376,5 +388,16 @@ Les images sont publiées en `linux/amd64` + `linux/arm64`.
 ## Mise à jour des submodules
 
 ```bash
-git submodule update --remote --merge
+bash install.sh --update-sources
 ```
+
+Ou manuellement :
+
+```bash
+git submodule update --remote --merge
+git add -u
+git commit -m "update submodules"
+git push origin main
+```
+
+Après le push, la CI rebuild automatiquement les images sur ghcr.io. Mettez ensuite le serveur à jour avec `--update`.

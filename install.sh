@@ -38,10 +38,11 @@ CRON_INTERVAL=5
 for arg in "$@"; do
     case "$arg" in
         --update|-u) MODE="update" ;;
-        --cron)      MODE="cron" ;;
-        --no-cron)   MODE="no-cron" ;;
-        --interval=*) CRON_INTERVAL="${arg#*=}" ;;
-        --help|-h)   MODE="help" ;;
+    --cron)              MODE="cron" ;;
+    --no-cron)           MODE="no-cron" ;;
+    --interval=*)        CRON_INTERVAL="${arg#*=}" ;;
+    --update-sources)    MODE="update-sources" ;;
+    --help|-h)           MODE="help" ;;
     esac
 done
 
@@ -62,6 +63,7 @@ if [ "$MODE" = "help" ]; then
     echo "  --cron           Active la mise à jour automatique (toutes les ${CRON_INTERVAL}min)"
     echo "  --no-cron        Désactive la mise à jour automatique"
     echo "  --interval=N     Intervalle en minutes (défaut: 5, use with --cron)"
+    echo "  --update-sources Met à jour les submodules git et push (déclenche CI)"
     echo ""
     echo "Variables d'environnement :"
     echo "  GITHUB_TOKEN=<token>   Token GHCR pour les images privées"
@@ -109,6 +111,45 @@ if [ "$MODE" = "cron" ] || [ "$MODE" = "no-cron" ]; then
     info "Mise à jour automatique activée (toutes les $CRON_INTERVAL minutes)"
     info "Logs : $LOG_FILE"
     info "Pour désactiver : bash install.sh --no-cron"
+    exit 0
+fi
+
+# ── Update sources (submodules) ───────────────────────────────────────────
+if [ "$MODE" = "update-sources" ]; then
+    header "LockBits — Mise à jour des sources"
+
+    if ! git rev-parse --git-dir &>/dev/null; then
+        error "Pas dans un dépôt git. Exécutez cette commande depuis le clone du repo principal (Lockbits-ESGI/main)"
+    fi
+
+    # Initialiser les submodules si pas déjà fait
+    if [ ! -f .gitmodules ]; then
+        error "Aucun .gitmodules trouvé — êtes-vous dans le bon repo ?"
+    fi
+
+    info "Mise à jour des submodules..."
+    git submodule update --remote --merge
+
+    if git diff --quiet --exit-code; then
+        info "Tous les submodules sont déjà à jour"
+    else
+        info "Modifications détectées, création du commit..."
+        git add -u
+        git commit -m "update submodules to latest"
+        info "Commit créé"
+
+        read -rp "Pousser sur origin/main ? [Y/n] " REPLY
+        if [[ "$REPLY" =~ ^[Yy]?$ ]]; then
+            git push origin main
+            info "Pushé — la CI va rebuild les images"
+        else
+            warn "Push annulé. Faites-le manuellement : git push origin main"
+        fi
+    fi
+
+    echo ""
+    info "Une fois les images rebuildées par la CI, mettez à jour le serveur avec :"
+    info "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update"
     exit 0
 fi
 
