@@ -387,11 +387,15 @@ Les images sont publiées en `linux/amd64` + `linux/arm64`.
 
 ## Mise à jour des submodules
 
+**Automatique** : un workflow GitHub vérifie toutes les heures si les submodules ont de nouveaux commits. Si oui, il met à jour la référence, commit et push — ce qui déclenche le rebuild des images. Aucune action manuelle nécessaire.
+
+**Manuel** (si besoin immédiat) :
+
 ```bash
 bash install.sh --update-sources
 ```
 
-Ou manuellement :
+Ou :
 
 ```bash
 git submodule update --remote --merge
@@ -400,4 +404,4 @@ git commit -m "update submodules"
 git push origin main
 ```
 
-Après le push, la CI rebuild automatiquement les images sur ghcr.io. Mettez ensuite le serveur à jour avec `--update`.
+Après le push (auto ou manuel), la CI rebuild les images sur ghcr.io. Le serveur de prod les récupère automatiquement via le cron `--cron` (toutes les 5min) ou manuellement avec `--update`.
