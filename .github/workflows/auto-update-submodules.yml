@@ -1,0 +1,46 @@
+name: Auto-update submodules
+
+on:
+  schedule:
+    # Toutes les heures — vérifie si les submodules ont de nouveaux commits
+    - cron: "0 * * * *"
+  workflow_dispatch:
+    # Permet un déclenchement manuel depuis l'interface GitHub
+
+jobs:
+  update:
+    name: Update submodules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update submodules to latest remote
+        run: |
+          git submodule update --remote --merge
+
+      - name: Check if anything changed
+        id: diff
+        run: |
+          if git diff --quiet --exit-code; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Submodules have new commits:"
+            git diff --submodule
+          fi
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "LockBits Bot"
+          git config user.email "bot@lockbits-esgi"
+          git add -u
+          git commit -m "chore: auto-update submodules"
+          git push origin main
