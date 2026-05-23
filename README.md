@@ -36,6 +36,12 @@ Mise à jour rapide plus tard :
 curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --update
 ```
 
+Mise à jour automatique (cron, toutes les 5 minutes) :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --cron
+```
+
 > **Windows (PowerShell) :**
 > ```powershell
 > iex (iwr -Uri 'https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh').Content
@@ -266,6 +272,22 @@ docker compose -f docker-compose.prod.yml up -d
 ```
 
 Les images sont automatiquement tirées à jour grâce à `pull_policy: always`.
+
+### Mise à jour automatique (cron)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --cron
+# ou avec un intervalle personnalisé :
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --cron --interval=10
+```
+
+Ajoute une entrée crontab qui vérifie et applique les mises à jour toutes les 5 minutes (configurable avec `--interval`). Les logs sont dans `./update.log`.
+
+Pour désactiver :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --no-cron
+```
 
 ---
 

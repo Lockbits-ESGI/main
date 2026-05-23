@@ -34,28 +34,81 @@ header(){ echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 
 # ── Mode detection ─────────────────────────────────────────────────────────
 MODE="install"
+CRON_INTERVAL=5
 for arg in "$@"; do
     case "$arg" in
         --update|-u) MODE="update" ;;
-        --help|-h) MODE="help" ;;
+        --cron)      MODE="cron" ;;
+        --no-cron)   MODE="no-cron" ;;
+        --interval=*) CRON_INTERVAL="${arg#*=}" ;;
+        --help|-h)   MODE="help" ;;
     esac
 done
 
 # ── Help ────────────────────────────────────────────────────────────────────
 if [ "$MODE" = "help" ]; then
-    echo "LockBits — Quick Install & Update"
+    echo "LockBits — Quick Install, Update & Auto-Update"
     echo ""
     echo "Usage:"
-    echo "  curl -fsSL $BASE_URL/install.sh | bash                    # Install"
-    echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update     # Update"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash                          # Install"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update           # Update"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --cron             # Auto-update (cron)"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --no-cron          # Stop auto-update"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --cron --interval=10  # Custom interval"
     echo ""
     echo "Modes :"
-    echo "  (default)    Installation complète (vérifie Docker, télécharge tout)"
-    echo "  --update,-u  Mise à jour rapide (rafraîchit config + redémarre)"
+    echo "  (default)        Installation complète"
+    echo "  --update,-u      Mise à jour rapide"
+    echo "  --cron           Active la mise à jour automatique (toutes les ${CRON_INTERVAL}min)"
+    echo "  --no-cron        Désactive la mise à jour automatique"
+    echo "  --interval=N     Intervalle en minutes (défaut: 5, use with --cron)"
     echo ""
     echo "Variables d'environnement :"
     echo "  GITHUB_TOKEN=<token>   Token GHCR pour les images privées"
     echo "  LOCKBITS_DIR=<path>    Répertoire d'installation"
+    exit 0
+fi
+
+# ── Cron setup ──────────────────────────────────────────────────────────────
+if [ "$MODE" = "cron" ] || [ "$MODE" = "no-cron" ]; then
+    header "LockBits — Mise à jour automatique"
+
+    INSTALL_DIR="${LOCKBITS_DIR:-.}"
+    mkdir -p "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+    INSTALL_DIR="$(pwd)"
+
+    if ! command -v crontab &>/dev/null; then
+        error "crontab n'est pas disponible sur ce système"
+    fi
+
+    CRON_MARKER="# LOCKBITS_AUTO_UPDATE"
+    LOG_FILE="$INSTALL_DIR/update.log"
+
+    if [ "$MODE" = "no-cron" ]; then
+        if crontab -l 2>/dev/null | grep -q "$CRON_MARKER"; then
+            crontab -l 2>/dev/null | grep -v "$CRON_MARKER" | grep -v "^# LOCKBITS_AUTO_UPDATE$" | crontab -
+            info "Mise à jour automatique désactivée"
+        else
+            info "Aucune mise à jour automatique active"
+        fi
+        exit 0
+    fi
+
+    # Vérifier si déjà configuré
+    if crontab -l 2>/dev/null | grep -q "$CRON_MARKER"; then
+        info "Mise à jour automatique déjà active"
+        exit 0
+    fi
+
+    # Créer la ligne cron
+    CRON_LINE="*/$CRON_INTERVAL * * * * cd $INSTALL_DIR && curl -fsSL $BASE_URL/install.sh | bash -s -- --update >> $LOG_FILE 2>&1"
+
+    (crontab -l 2>/dev/null || true; echo "$CRON_LINE"; echo "$CRON_MARKER") | crontab -
+
+    info "Mise à jour automatique activée (toutes les $CRON_INTERVAL minutes)"
+    info "Logs : $LOG_FILE"
+    info "Pour désactiver : bash install.sh --no-cron"
     exit 0
 fi
 
