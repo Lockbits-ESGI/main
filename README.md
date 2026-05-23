@@ -200,7 +200,7 @@ networks:
 
 ```bash
 # ── EDR Server ───────────────────────────────────────────────────────────
-EDR_PORT=8000
+EDR_PORT=8001
 EDR_DATABASE_URL=sqlite:///./miniedr.db
 EDR_AUTH_TOKEN=
 VT_ENABLED=false
