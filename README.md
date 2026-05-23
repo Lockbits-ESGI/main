@@ -30,6 +30,12 @@ curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh 
 
 Le script télécharge les fichiers de config, crée le `.env`, se connecte à GHCR si le token est fourni, lance la stack, et vérifie que tout fonctionne.
 
+Mise à jour rapide plus tard :
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --update
+```
+
 > **Windows (PowerShell) :**
 > ```powershell
 > iex (iwr -Uri 'https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh').Content
@@ -245,7 +251,15 @@ curl http://localhost:8001/health   # EDR → {"status":"ok","db_ok":true}
 curl http://localhost:8080/         # Site → 200 OK
 ```
 
-### Mettre à jour vers la dernière image
+### Mettre à jour (one-liner)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --update
+```
+
+Ce one-liner télécharge la dernière config, détecte les nouvelles variables d'env, et redémarre la stack avec les images les plus récentes.
+
+Alternative si vous avez déjà les fichiers :
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d

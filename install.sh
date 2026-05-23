@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# LockBits — Quick Install
+# LockBits — Quick Install / Update
 # ─────────────────────────────────────────────────────────────────────────────
 # Usage :
 #   curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash
+#   curl -fsSL ... | bash -s -- --update        # mise à jour rapide
 #
-# Ou avec un token GHCR :
-#   curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | GITHUB_TOKEN=<token> bash
+# Avec un token GHCR :
+#   curl -fsSL ... | GITHUB_TOKEN=<token> bash
+#   curl -fsSL ... | GITHUB_TOKEN=<token> bash -s -- --update
 #
 # Variables d'environnement :
 #   GITHUB_TOKEN   Token GHCR avec accès aux images privées
@@ -30,34 +32,46 @@ warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
 error() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 header(){ echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 
+# ── Mode detection ─────────────────────────────────────────────────────────
+MODE="install"
+for arg in "$@"; do
+    case "$arg" in
+        --update|-u) MODE="update" ;;
+        --help|-h) MODE="help" ;;
+    esac
+done
+
 # ── Help ────────────────────────────────────────────────────────────────────
-if [[ "${1:-}" = "--help" || "${1:-}" = "-h" ]]; then
-    echo "LockBits — Quick Install"
+if [ "$MODE" = "help" ]; then
+    echo "LockBits — Quick Install & Update"
     echo ""
     echo "Usage:"
-    echo "  curl -fsSL $BASE_URL/install.sh | bash"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash                    # Install"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update     # Update"
+    echo ""
+    echo "Modes :"
+    echo "  (default)    Installation complète (vérifie Docker, télécharge tout)"
+    echo "  --update,-u  Mise à jour rapide (rafraîchit config + redémarre)"
     echo ""
     echo "Variables d'environnement :"
     echo "  GITHUB_TOKEN=<token>   Token GHCR pour les images privées"
     echo "  LOCKBITS_DIR=<path>    Répertoire d'installation"
-    echo ""
-    echo "Étapes :"
-    echo "  1. Vérifie que Docker + Docker Compose sont installés"
-    echo "  2. Télécharge docker-compose.prod.yml et .env.example depuis GitHub"
-    echo "  3. Crée .env à partir de .env.example si absent"
-    echo "  4. Se connecte à ghcr.io si GITHUB_TOKEN est défini"
-    echo "  5. Lance docker compose up -d"
-    echo "  6. Vérifie que les services répondent"
     exit 0
 fi
 
-header "LockBits — Quick Install"
-
-# ── 1. Vérifier Docker ─────────────────────────────────────────────────────
-if ! command -v docker &>/dev/null; then
-    error "Docker n'est pas installé. Voir https://docs.docker.com/get-docker/"
+if [ "$MODE" = "update" ]; then
+    header "LockBits — Mise à jour"
+else
+    header "LockBits — Quick Install"
 fi
-info "Docker trouvé : $(docker --version | cut -d' ' -f3 | tr -d ',')"
+
+# ── 1. Vérifier Docker (uniquement en mode install) ─────────────────────────
+if [ "$MODE" = "install" ]; then
+    if ! command -v docker &>/dev/null; then
+        error "Docker n'est pas installé. Voir https://docs.docker.com/get-docker/"
+    fi
+    info "Docker trouvé : $(docker --version | cut -d' ' -f3 | tr -d ',')"
+fi
 
 COMPOSE_CMD=""
 if docker compose version &>/dev/null; then
@@ -67,57 +81,79 @@ elif docker-compose --version &>/dev/null; then
 else
     error "Docker Compose n'est pas installé"
 fi
-info "Compose trouvé : $($COMPOSE_CMD version | head -1)"
+info "Compose : $($COMPOSE_CMD version | head -1)"
 
-# ── 2. Répertoire d'installation ───────────────────────────────────────────
+# ── 2. Répertoire ──────────────────────────────────────────────────────────
 INSTALL_DIR="${LOCKBITS_DIR:-.}"
 mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
-info "Installation dans : $(pwd)"
+info "Répertoire : $(pwd)"
 
 # ── 3. Télécharger les fichiers de configuration ────────────────────────────
-header "Téléchargement des fichiers"
+header "Fichiers de configuration"
 
 for file in docker-compose.prod.yml .env.example; do
     info "Téléchargement de $file..."
     curl -fsSL -o "$file" "$BASE_URL/$file"
 done
 
-# ── 4. Créer .env ──────────────────────────────────────────────────────────
-if [ ! -f .env ]; then
+# ── 4. Gérer .env ──────────────────────────────────────────────────────────
+if [ "$MODE" = "update" ] && [ -f .env ]; then
+    # En mode update : détecter les nouvelles variables
+    NEW_VARS=$(grep -E '^[A-Z_]+=' .env.example | cut -d= -f1 | while IFS= read -r var; do
+        grep -q "^$var=" .env 2>/dev/null || echo "  $var"
+    done)
+    if [ -n "$NEW_VARS" ]; then
+        warn "Nouvelles variables dans .env.example (à ajouter dans .env) :"
+        echo "$NEW_VARS"
+        echo ""
+        warn "Exécutez : cat .env.example >> .env puis éditez .env"
+    else
+        info "Aucune nouvelle variable détectée"
+    fi
+elif [ ! -f .env ]; then
     cp .env.example .env
     info ".env créé depuis .env.example"
-    warn "PENSEZ À ÉDITER .env avec vos vraies valeurs (tokens API, etc.)"
+    if [ "$MODE" = "install" ]; then
+        warn "PENSEZ À ÉDITER .env avec vos vraies valeurs (tokens API, etc.)"
+    fi
 else
-    info ".env existant conservé"
+    info ".env conservé"
 fi
 
 # ── 5. Connexion GHCR ──────────────────────────────────────────────────────
-header "Connexion au registry"
+if [ "$MODE" = "install" ]; then
+    header "Connexion au registry"
 
-if docker system info 2>/dev/null | grep -q "ghcr.io"; then
-    info "Déjà connecté à ghcr.io"
-elif [ -n "${GITHUB_TOKEN:-}" ]; then
-    GHCR_USER="${GITHUB_USER:-$(whoami)}"
-    if echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>/dev/null; then
-        info "Connecté à ghcr.io en tant que $GHCR_USER"
+    if docker system info 2>/dev/null | grep -q "ghcr.io"; then
+        info "Déjà connecté à ghcr.io"
+    elif [ -n "${GITHUB_TOKEN:-}" ]; then
+        GHCR_USER="${GITHUB_USER:-$(whoami)}"
+        if echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>/dev/null; then
+            info "Connecté à ghcr.io en tant que $GHCR_USER"
+        else
+            warn "Échec de connexion à ghcr.io — vérifiez votre GITHUB_TOKEN"
+        fi
     else
-        warn "Échec de connexion à ghcr.io — vérifiez votre GITHUB_TOKEN"
+        warn "GITHUB_TOKEN non défini"
+        warn "Les images sont privées → connectez-vous d'abord :"
+        warn "  echo \$GITHUB_TOKEN | docker login ghcr.io -u <username> --password-stdin"
     fi
-else
-    warn "GITHUB_TOKEN non défini"
-    warn "Les images sont privées → connectez-vous d'abord :"
-    warn "  echo \$GITHUB_TOKEN | docker login ghcr.io -u <username> --password-stdin"
 fi
 
 # ── 6. Déploiement ─────────────────────────────────────────────────────────
 header "Déploiement"
 
-info "Lancement de la stack LockBits..."
+if [ "$MODE" = "update" ]; then
+    info "Redémarrage de la stack avec les dernières images..."
+else
+    info "Lancement de la stack LockBits..."
+fi
+
 $COMPOSE_CMD -f docker-compose.prod.yml up -d
 
 # ── 7. Vérification ────────────────────────────────────────────────────────
-header "Vérification des services"
+header "Vérification"
 
 echo -n "Attente des services "
 for i in $(seq 1 12); do
@@ -144,14 +180,21 @@ else
 fi
 
 echo ""
-if $EDR || $SITE; then
+if [ "$MODE" = "update" ]; then
+    if $EDR || $SITE; then
+        info "Mise à jour terminée !"
+    else
+        warn "Les services redémarrent... Vérifiez avec :"
+        warn "  $COMPOSE_CMD -f docker-compose.prod.yml logs -f"
+    fi
+elif $EDR || $SITE; then
     info "Installation terminée avec succès !"
 else
     warn "Les services sont encore en cours de démarrage."
     warn "Surveillez avec : $COMPOSE_CMD -f docker-compose.prod.yml logs -f"
 fi
 echo ""
-info "Commandes utiles :"
-info "  Voir les logs  : $COMPOSE_CMD -f docker-compose.prod.yml logs -f"
-info "  Arrêter        : $COMPOSE_CMD -f docker-compose.prod.yml down"
-info "  Mettre à jour  : $COMPOSE_CMD -f docker-compose.prod.yml up -d"
+info "Commandes :"
+info "  Logs          : $COMPOSE_CMD -f docker-compose.prod.yml logs -f"
+info  "  Arrêter       : $COMPOSE_CMD -f docker-compose.prod.yml down"
+info  "  Mettre à jour : curl -fsSL $BASE_URL/install.sh | bash -s -- --update"
