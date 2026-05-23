@@ -79,12 +79,8 @@ info "Installation dans : $(pwd)"
 header "Téléchargement des fichiers"
 
 for file in docker-compose.prod.yml .env.example; do
-    if [ -f "$file" ]; then
-        info "$file existe déjà, conservation"
-    else
-        info "Téléchargement de $file..."
-        curl -fsSL -o "$file" "$BASE_URL/$file"
-    fi
+    info "Téléchargement de $file..."
+    curl -fsSL -o "$file" "$BASE_URL/$file"
 done
 
 # ── 4. Créer .env ──────────────────────────────────────────────────────────

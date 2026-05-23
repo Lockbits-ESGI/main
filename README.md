@@ -53,8 +53,6 @@ cp .env.example .env
 <summary><code>docker-compose.prod.yml</code></summary>
 
 ```yaml
-version: '3.8'
-
 # Déploiement production — tire les images depuis ghcr.io, aucun clone requis.
 # L'init DB est automatique via le service db-init.
 # Usage :
