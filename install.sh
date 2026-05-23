@@ -133,8 +133,8 @@ echo ""
 EDR=false
 SITE=false
 
-if curl -sf http://localhost:8000/health >/dev/null 2>&1; then
-    info "EDR Server  → http://localhost:8000  (✓)"
+if curl -sf http://localhost:8001/health >/dev/null 2>&1; then
+    info "EDR Server  → http://localhost:8001  (✓)"
     EDR=true
 else
     warn "EDR Server  → pas encore prêt (vérifiez avec docker compose logs)"

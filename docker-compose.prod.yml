@@ -17,7 +17,7 @@ services:
     container_name: lockbits_edr
     pull_policy: always
     ports:
-      - "${EDR_PORT:-8000}:8000"
+      - "${EDR_PORT:-8001}:8000"
     environment:
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "8000"

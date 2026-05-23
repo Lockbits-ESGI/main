@@ -6,7 +6,7 @@ Repo d'orchestration qui regroupe tous les composants LockBits via git submodule
 
 | Service | Image GHCR | Port |
 |---------|-----------|------|
-| EDR Server (FastAPI) | `ghcr.io/lockbits-esgi/edr:latest` | 8000 |
+| EDR Server (FastAPI) | `ghcr.io/lockbits-esgi/edr:latest` | 8001 |
 | Site LockBits (PHP/Apache) | `ghcr.io/lockbits-esgi/site_lockbits:latest` | 8080 |
 | MySQL | `mysql:8.0` | 3307 |
 
@@ -71,7 +71,7 @@ services:
     container_name: lockbits_edr
     pull_policy: always
     ports:
-      - "${EDR_PORT:-8000}:8000"
+      - "${EDR_PORT:-8001}:8000"
     environment:
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "8000"
@@ -245,7 +245,7 @@ L'initialisation de la base de données (création des tables) est **automatique
 
 ```bash
 docker compose -f docker-compose.prod.yml ps
-curl http://localhost:8000/health   # EDR → {"status":"ok","db_ok":true}
+curl http://localhost:8001/health   # EDR → {"status":"ok","db_ok":true}
 curl http://localhost:8080/         # Site → 200 OK
 ```
 
