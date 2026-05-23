@@ -102,13 +102,11 @@ services:
       DB_PASS: ${DB_PASS:-lockbits_password}
       DB_NAME: ${DB_NAME:-lockbits_client}
     entrypoint: >
-      sh -c "
-        echo '>>> Initializing database schema...' &&
-        sleep 3 &&
-        mysql -h site-db -u \"$$DB_USER\" -p\"$$DB_PASS\" \"$$DB_NAME\"
-          < /var/www/html/client/database.sql &&
-        echo '>>> Database initialized'
-      "
+      echo '>>> Initializing database schema...' &&
+      sleep 3 &&
+      mysql -h site-db -u "$$DB_USER" -p"$$DB_PASS" "$$DB_NAME"
+        < /var/www/html/client/database.sql &&
+      echo '>>> Database initialized'
     networks:
       - backend
     restart: "no"
