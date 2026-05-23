@@ -1,12 +1,17 @@
 version: '3.8'
 
 # Déploiement production — tire les images depuis ghcr.io, aucun clone requis.
+# L'init DB est automatique via le service db-init.
 # Usage :
-#   docker compose -f docker-compose.prod.yml pull
 #   docker compose -f docker-compose.prod.yml up -d
+#
+# Architecture réseau :
+#   frontend ── edr-server, site-web    (ports exposés)
+#   backend  ── site-web, site-db       (interne, aucun port exposé)
 
 services:
 
+  # ── EDR Server (FastAPI) ──────────────────────────────────────────────────
   edr-server:
     image: ghcr.io/lockbits-esgi/edr:latest
     container_name: lockbits_edr
@@ -24,7 +29,7 @@ services:
     volumes:
       - edr_data:/app/data
     networks:
-      - lockbits_network
+      - frontend
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -33,10 +38,40 @@ services:
       retries: 3
       start_period: 15s
 
+  # ── Initialisation automatique de la base de données ──────────────────────
+  # S'exécute une fois au premier déploiement (idempotent).
+  # Utilise l'image site_lockbits qui contient mysql CLI + database.sql.
+  db-init:
+    image: ghcr.io/lockbits-esgi/site_lockbits:latest
+    container_name: lockbits_init
+    pull_policy: always
+    depends_on:
+      site-db:
+        condition: service_healthy
+    environment:
+      DB_USER: ${DB_USER:-lockbits}
+      DB_PASS: ${DB_PASS:-lockbits_password}
+      DB_NAME: ${DB_NAME:-lockbits_client}
+    entrypoint: >
+      sh -c "
+        echo '>>> Waiting for database...' &&
+        sleep 3 &&
+        echo '>>> Initializing database schema...' &&
+        mysql -h site-db -u \"$$DB_USER\" -p\"$$DB_PASS\" \"$$DB_NAME\" < /var/www/html/client/database.sql &&
+        echo '>>> Database initialized successfully'
+      "
+    networks:
+      - backend
+    restart: "no"
+
+  # ── LockBits Site (PHP/Apache) ────────────────────────────────────────────
   site-web:
     image: ghcr.io/lockbits-esgi/site_lockbits:latest
     container_name: lockbits_web
     pull_policy: always
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
     ports:
       - "${WEB_PORT:-8080}:80"
     environment:
@@ -56,11 +91,9 @@ services:
       GLPI_API_USERNAME: ${GLPI_API_USERNAME:-}
       GLPI_API_PASSWORD: ${GLPI_API_PASSWORD:-}
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
-    depends_on:
-      site-db:
-        condition: service_healthy
     networks:
-      - lockbits_network
+      - frontend
+      - backend
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
@@ -69,11 +102,10 @@ services:
       retries: 3
       start_period: 40s
 
+  # ── MySQL (for the site) ──────────────────────────────────────────────────
   site-db:
     image: mysql:8.0
     container_name: lockbits_db
-    ports:
-      - "${DB_EXPOSE_PORT:-3307}:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
       MYSQL_DATABASE: ${DB_NAME:-lockbits_client}
@@ -82,7 +114,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - lockbits_network
+      - backend
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -98,5 +130,7 @@ volumes:
     driver: local
 
 networks:
-  lockbits_network:
+  frontend:
+    driver: bridge
+  backend:
     driver: bridge
