@@ -69,8 +69,8 @@ if [ "$MODE" = "help" ]; then
     echo "  (default)        Installation complète (production)"
     echo "  --env=preprod    Installation préproduction (:develop images)"
     echo "  --update,-u      Mise à jour rapide"
-    echo "  --cron           [DÉPRÉCIÉ] Active la mise à jour automatique (remplacé par Watchtower)"
-    echo "  --no-cron        [DÉPRÉCIÉ] Désactive la mise à jour automatique"
+    echo "  --cron           Active la mise à jour automatique (cron, toutes les 5 min)"
+    echo "  --no-cron        Désactive la mise à jour automatique"
     echo "  --interval=N     Intervalle en minutes (défaut: 5, use with --cron)"
     echo "  --update-sources Met à jour les submodules git et push (déclenche CI)"
     echo ""
@@ -83,12 +83,6 @@ fi
 # ── Cron setup ──────────────────────────────────────────────────────────────
 if [ "$MODE" = "cron" ] || [ "$MODE" = "no-cron" ]; then
     header "LockBits — Mise à jour automatique"
-
-    warn "ATTENTION : Le cron bash est DÉPRÉCIÉ"
-    warn "Watchtower (inclus dans docker-compose) remplace ce mécanisme."
-    warn "Supprimez ce cron avec --no-cron, puis déployez avec Watchtower :"
-    warn "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update"
-    echo ""
 
     INSTALL_DIR="${LOCKBITS_DIR:-.}"
     mkdir -p "$INSTALL_DIR"
@@ -106,7 +100,6 @@ if [ "$MODE" = "cron" ] || [ "$MODE" = "no-cron" ]; then
         if crontab -l 2>/dev/null | grep -q "$CRON_MARKER"; then
             crontab -l 2>/dev/null | grep -v "$CRON_MARKER" | grep -v "^# LOCKBITS_AUTO_UPDATE$" | crontab -
             info "Mise à jour automatique (cron) désactivée"
-            info "Watchtower dans le docker-compose assure maintenant les mises à jour."
         else
             info "Aucune mise à jour automatique (cron) active"
         fi
@@ -115,21 +108,17 @@ if [ "$MODE" = "cron" ] || [ "$MODE" = "no-cron" ]; then
 
     # Vérifier si déjà configuré
     if crontab -l 2>/dev/null | grep -q "$CRON_MARKER"; then
-        warn "Mise à jour automatique (cron) déjà active — DÉPRÉCIÉE"
-        warn "Remplacez-la par Watchtower (inclus dans docker-compose)."
-        warn "  bash install.sh --no-cron"
+        warn "Mise à jour automatique (cron) déjà active"
+        info "Pour la désactiver : bash install.sh --no-cron"
         exit 0
     fi
 
-    # Créer la ligne cron (maintenu pour compatibilité mais déprécié)
+    # Créer la ligne cron
     CRON_LINE="*/$CRON_INTERVAL * * * * cd $INSTALL_DIR && curl -fsSL $BASE_URL/install.sh | bash -s -- --update >> $LOG_FILE 2>&1"
 
     (crontab -l 2>/dev/null || true; echo "$CRON_LINE"; echo "$CRON_MARKER") | crontab -
 
-    warn "Mise à jour automatique (cron) activée — DÉPRÉCIÉE"
-    warn "Remplacez-la par Watchtower dès que possible :"
-    warn "  bash install.sh --no-cron"
-    warn "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update"
+    info "Mise à jour automatique (cron) activée toutes les $CRON_INTERVAL minutes"
     info "Logs : $LOG_FILE"
     exit 0
 fi
