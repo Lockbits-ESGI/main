@@ -269,7 +269,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Scan EDR image (CRITICAL+HIGH → fail)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.ORG }}/edr:latest
           format: table
@@ -279,7 +279,7 @@ jobs:
           hide-progress: false
 
       - name: Scan site image (CRITICAL+HIGH → fail)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits:latest
           format: table
