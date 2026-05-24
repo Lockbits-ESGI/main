@@ -131,13 +131,28 @@ Les tests du site sont effectués via smoke tests dans la CI.
 Le workflow CI est défini dans `.github/workflows/build-and-push.yml` :
 
 ```
-test-edr-unit → test-edr-integration → build-edr (GHCR)
-test-site-smoke ──────────────────────→ build-site (GHCR)
+test-edr-unit → test-edr-integration → build-edr (GHCR) ──┐
+test-site-smoke ──────────────────────→ build-site (GHCR) ──┤
+                                                            ↓
+secret-scan (parallel, all branches)                  trivy-scan (CRITICAL+HIGH)
 ```
 
 - Les tests sont exécutés sur chaque push
 - Les images Docker sont publiées sur `ghcr.io/lockbits-esgi/*`
 - Multi-arch : `linux/amd64` + `linux/arm64`
+- 🔐 **Secret scanning** (Gitleaks) : exécuté en parallèle sur chaque push/PR
+- 🔍 **Trivy** : scan des images Docker après publication, fail sur CRITICAL/HIGH
+
+### Dependabot
+
+La configuration Dependabot est dans `.github/dependabot.yml` :
+
+| Écosystème | Directory | Fréquence |
+|------------|-----------|-----------|
+| pip (EDR) | `/edr` | Hebdomadaire (lundi) |
+| Docker (EDR) | `/docker/edr` | Hebdomadaire (lundi) |
+| Docker (Site) | `/site_lockbits` | Hebdomadaire (lundi) |
+| GitHub Actions | `/` | Hebdomadaire (lundi) |
 
 ## Créer une Pull Request
 
