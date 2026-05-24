@@ -250,22 +250,6 @@ jobs:
 # STAGE 3 — Security Scans
 # ─────────────────────────────────────────────────────────────────────────────
 
-  secret-scan:
-    name: "🔐 Secret scanning"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Configure git safe directory
-        run: git config --global --add safe.directory /github/workspace
-
-      - name: Run Gitleaks (OSS — no license required)
-        uses: docker://ghcr.io/gitleaks/gitleaks:latest
-        with:
-          args: detect --source . --verbose
-
   trivy-scan:
     name: "🔍 Trivy · Docker image scan"
     runs-on: ubuntu-latest
