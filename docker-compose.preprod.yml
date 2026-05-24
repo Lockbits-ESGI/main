@@ -1,7 +1,6 @@
-# Déploiement production — tire les images depuis ghcr.io, aucun clone requis.
-# L'init DB est automatique via le service db-init.
+# Déploiement preprod — tire les images depuis ghcr.io avec le tag :develop.
 # Usage :
-#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.preprod.yml up -d
 #
 # Architecture réseau :
 #   frontend ── edr-server, site-web    (ports exposés)
@@ -11,8 +10,8 @@ services:
 
   # ── EDR Server (FastAPI) ──────────────────────────────────────────────────
   edr-server:
-    image: ghcr.io/lockbits-esgi/edr:latest
-    container_name: lockbits_edr
+    image: ghcr.io/lockbits-esgi/edr:develop
+    container_name: lockbits_edr_preprod
     pull_policy: always
     ports:
       - "${EDR_PORT:-8001}:8000"
@@ -26,7 +25,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
-      - edr_data:/app/data
+      - edr_data_preprod:/app/data
     networks:
       - frontend
     restart: unless-stopped
@@ -38,11 +37,9 @@ services:
       start_period: 15s
 
   # ── Initialisation automatique de la base de données ──────────────────────
-  # S'exécute une fois au premier déploiement (idempotent).
-  # Utilise l'image site_lockbits qui contient mysql CLI + database.sql.
   db-init:
-    image: ghcr.io/lockbits-esgi/site_lockbits:latest
-    container_name: lockbits_init
+    image: ghcr.io/lockbits-esgi/site_lockbits:develop
+    container_name: lockbits_init_preprod
     pull_policy: always
     depends_on:
       site-db:
@@ -64,8 +61,8 @@ services:
 
   # ── LockBits Site (PHP/Apache) ────────────────────────────────────────────
   site-web:
-    image: ghcr.io/lockbits-esgi/site_lockbits:latest
-    container_name: lockbits_web
+    image: ghcr.io/lockbits-esgi/site_lockbits:develop
+    container_name: lockbits_web_preprod
     pull_policy: always
     depends_on:
       db-init:
@@ -78,8 +75,8 @@ services:
       DB_NAME: ${DB_NAME:-lockbits_client}
       DB_USER: ${DB_USER:-lockbits}
       DB_PASS: ${DB_PASS:-lockbits_password}
-      APP_NAME: ${APP_NAME:-LockBits Client Area}
-      APP_ENV: ${APP_ENV:-production}
+      APP_NAME: ${APP_NAME:-LockBits Client Area (Preprod)}
+      APP_ENV: ${APP_ENV:-staging}
       GLPI_API_URL: ${GLPI_API_URL:-}
       GLPI_WEB_URL: ${GLPI_WEB_URL:-}
       GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
@@ -103,14 +100,14 @@ services:
   # ── MySQL (for the site) ──────────────────────────────────────────────────
   site-db:
     image: mysql:8.0
-    container_name: lockbits_db
+    container_name: lockbits_db_preprod
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
       MYSQL_DATABASE: ${DB_NAME:-lockbits_client}
       MYSQL_USER: ${DB_USER:-lockbits}
       MYSQL_PASSWORD: ${DB_PASS:-lockbits_password}
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data_preprod:/var/lib/mysql
     networks:
       - backend
     restart: unless-stopped
@@ -124,16 +121,16 @@ services:
   # ── Watchtower — Mise à jour automatique ──────────────────────────────
   watchtower:
     image: containrrr/watchtower
-    container_name: lockbits_watchtower
+    container_name: lockbits_watchtower_preprod
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 300 --cleanup
     restart: unless-stopped
 
 volumes:
-  mysql_data:
+  mysql_data_preprod:
     driver: local
-  edr_data:
+  edr_data_preprod:
     driver: local
 
 networks:
