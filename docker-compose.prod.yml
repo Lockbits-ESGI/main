@@ -36,6 +36,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
 
   # ── Initialisation automatique de la base de données ──────────────────────
   # S'exécute une fois au premier déploiement (idempotent).
@@ -99,6 +104,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
 
   # ── MySQL (for the site) ──────────────────────────────────────────────────
   site-db:
@@ -120,12 +130,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
 
-  # ── Watchtower — Mise à jour automatique ──────────────────────────────
-  watchtower:
-    image: containrrr/watchtower
-    container_name: lockbits_watchtower
-    volumes:
+volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 300 --cleanup
     restart: unless-stopped
