@@ -35,6 +35,7 @@ header(){ echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 # ── Mode detection ─────────────────────────────────────────────────────────
 MODE="install"
 CRON_INTERVAL=5
+ENV_TARGET="prod"
 for arg in "$@"; do
     case "$arg" in
         --update|-u) MODE="update" ;;
@@ -42,26 +43,34 @@ for arg in "$@"; do
     --no-cron)           MODE="no-cron" ;;
     --interval=*)        CRON_INTERVAL="${arg#*=}" ;;
     --update-sources)    MODE="update-sources" ;;
+    --env=*)             ENV_TARGET="${arg#*=}" ;;
     --help|-h)           MODE="help" ;;
     esac
 done
+
+# ── Validate env target ────────────────────────────────────────────────────
+case "$ENV_TARGET" in
+    prod|preprod) ;;
+    *) error "Valeur invalide pour --env : '$ENV_TARGET'. Utilisez 'prod' ou 'preprod'." ;;
+esac
 
 # ── Help ────────────────────────────────────────────────────────────────────
 if [ "$MODE" = "help" ]; then
     echo "LockBits — Quick Install, Update & Auto-Update"
     echo ""
     echo "Usage:"
-    echo "  curl -fsSL $BASE_URL/install.sh | bash                          # Install"
+    echo "  curl -fsSL $BASE_URL/install.sh | bash                          # Install (prod)"
     echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update           # Update"
     echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --cron             # Auto-update (cron)"
     echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --no-cron          # Stop auto-update"
     echo "  curl -fsSL $BASE_URL/install.sh | bash -s -- --cron --interval=10  # Custom interval"
     echo ""
     echo "Modes :"
-    echo "  (default)        Installation complète"
+    echo "  (default)        Installation complète (production)"
+    echo "  --env=preprod    Installation préproduction (:develop images)"
     echo "  --update,-u      Mise à jour rapide"
-    echo "  --cron           Active la mise à jour automatique (toutes les ${CRON_INTERVAL}min)"
-    echo "  --no-cron        Désactive la mise à jour automatique"
+    echo "  --cron           [DÉPRÉCIÉ] Active la mise à jour automatique (remplacé par Watchtower)"
+    echo "  --no-cron        [DÉPRÉCIÉ] Désactive la mise à jour automatique"
     echo "  --interval=N     Intervalle en minutes (défaut: 5, use with --cron)"
     echo "  --update-sources Met à jour les submodules git et push (déclenche CI)"
     echo ""
@@ -74,6 +83,12 @@ fi
 # ── Cron setup ──────────────────────────────────────────────────────────────
 if [ "$MODE" = "cron" ] || [ "$MODE" = "no-cron" ]; then
     header "LockBits — Mise à jour automatique"
+
+    warn "ATTENTION : Le cron bash est DÉPRÉCIÉ"
+    warn "Watchtower (inclus dans docker-compose) remplace ce mécanisme."
+    warn "Supprimez ce cron avec --no-cron, puis déployez avec Watchtower :"
+    warn "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update"
+    echo ""
 
     INSTALL_DIR="${LOCKBITS_DIR:-.}"
     mkdir -p "$INSTALL_DIR"
@@ -90,27 +105,32 @@ if [ "$MODE" = "cron" ] || [ "$MODE" = "no-cron" ]; then
     if [ "$MODE" = "no-cron" ]; then
         if crontab -l 2>/dev/null | grep -q "$CRON_MARKER"; then
             crontab -l 2>/dev/null | grep -v "$CRON_MARKER" | grep -v "^# LOCKBITS_AUTO_UPDATE$" | crontab -
-            info "Mise à jour automatique désactivée"
+            info "Mise à jour automatique (cron) désactivée"
+            info "Watchtower dans le docker-compose assure maintenant les mises à jour."
         else
-            info "Aucune mise à jour automatique active"
+            info "Aucune mise à jour automatique (cron) active"
         fi
         exit 0
     fi
 
     # Vérifier si déjà configuré
     if crontab -l 2>/dev/null | grep -q "$CRON_MARKER"; then
-        info "Mise à jour automatique déjà active"
+        warn "Mise à jour automatique (cron) déjà active — DÉPRÉCIÉE"
+        warn "Remplacez-la par Watchtower (inclus dans docker-compose)."
+        warn "  bash install.sh --no-cron"
         exit 0
     fi
 
-    # Créer la ligne cron
+    # Créer la ligne cron (maintenu pour compatibilité mais déprécié)
     CRON_LINE="*/$CRON_INTERVAL * * * * cd $INSTALL_DIR && curl -fsSL $BASE_URL/install.sh | bash -s -- --update >> $LOG_FILE 2>&1"
 
     (crontab -l 2>/dev/null || true; echo "$CRON_LINE"; echo "$CRON_MARKER") | crontab -
 
-    info "Mise à jour automatique activée (toutes les $CRON_INTERVAL minutes)"
+    warn "Mise à jour automatique (cron) activée — DÉPRÉCIÉE"
+    warn "Remplacez-la par Watchtower dès que possible :"
+    warn "  bash install.sh --no-cron"
+    warn "  curl -fsSL $BASE_URL/install.sh | bash -s -- --update"
     info "Logs : $LOG_FILE"
-    info "Pour désactiver : bash install.sh --no-cron"
     exit 0
 fi
 
@@ -183,10 +203,19 @@ mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 info "Répertoire : $(pwd)"
 
-# ── 3. Télécharger les fichiers de configuration ────────────────────────────
-header "Fichiers de configuration"
+# ── 3. Déterminer le fichier compose ──────────────────────────────────────
+if [ "$ENV_TARGET" = "preprod" ]; then
+    COMPOSE_FILE="docker-compose.preprod.yml"
+    COMPOSE_DISPLAY="Preprod"
+else
+    COMPOSE_FILE="docker-compose.prod.yml"
+    COMPOSE_DISPLAY="Production"
+fi
 
-for file in docker-compose.prod.yml .env.example; do
+# ── 4. Télécharger les fichiers de configuration ────────────────────────────
+header "Fichiers de configuration ($COMPOSE_DISPLAY)"
+
+for file in "$COMPOSE_FILE" .env.example; do
     info "Téléchargement de $file..."
     curl -fsSL -o "$file" "$BASE_URL/$file"
 done
@@ -244,7 +273,7 @@ else
     info "Lancement de la stack LockBits..."
 fi
 
-$COMPOSE_CMD -f docker-compose.prod.yml up -d
+$COMPOSE_CMD -f "$COMPOSE_FILE" up -d
 
 # ── 7. Vérification ────────────────────────────────────────────────────────
 header "Vérification"
@@ -279,16 +308,16 @@ if [ "$MODE" = "update" ]; then
         info "Mise à jour terminée !"
     else
         warn "Les services redémarrent... Vérifiez avec :"
-        warn "  $COMPOSE_CMD -f docker-compose.prod.yml logs -f"
+        warn "  $COMPOSE_CMD -f $COMPOSE_FILE logs -f"
     fi
 elif $EDR || $SITE; then
     info "Installation terminée avec succès !"
 else
     warn "Les services sont encore en cours de démarrage."
-    warn "Surveillez avec : $COMPOSE_CMD -f docker-compose.prod.yml logs -f"
+    warn "Surveillez avec : $COMPOSE_CMD -f $COMPOSE_FILE logs -f"
 fi
 echo ""
 info "Commandes :"
-info "  Logs          : $COMPOSE_CMD -f docker-compose.prod.yml logs -f"
-info  "  Arrêter       : $COMPOSE_CMD -f docker-compose.prod.yml down"
+info "  Logs          : $COMPOSE_CMD -f $COMPOSE_FILE logs -f"
+info  "  Arrêter       : $COMPOSE_CMD -f $COMPOSE_FILE down"
 info  "  Mettre à jour : curl -fsSL $BASE_URL/install.sh | bash -s -- --update"
