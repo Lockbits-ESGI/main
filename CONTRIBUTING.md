@@ -34,8 +34,9 @@ LockBits-main/
 │   └── docs/             # Documentation
 ├── .github/workflows/    # CI/CD GitHub Actions
 ├── docker-compose.yml    # Dev stack
-├── docker-compose.prod.yml # Prod stack
-└── install.sh            # One-liner deploy
+├── docker-compose.prod.yml       # Prod stack (images :latest + Watchtower)
+├── docker-compose.preprod.yml    # Preprod stack (images :develop + Watchtower)
+└── install.sh            # One-liner deploy (--env=prod|preprod)
 ```
 
 ## Premiers pas
@@ -54,6 +55,9 @@ LockBits-main/
 git clone --recurse-submodules git@github.com:Lockbits-ESGI/main.git
 cd main
 
+# Se placer sur develop (branche active de développement)
+git checkout develop
+
 # Configurer l'environnement
 cp .env.example .env
 
@@ -67,11 +71,30 @@ curl http://localhost:8080/
 
 ## Workflow de développement
 
-1. **Créer une branche** : `git checkout -b feat/ma-feature` ou `fix/mon-bug`
+Le projet suit un **Git Flow simplifié** avec 3 niveaux de branches :
+
+```
+feature/* ──PR──→ develop ──PR──→ main (protégée)
+fix/*     ──PR──→ develop ╱
+```
+
+### Branches
+
+| Branche | Usage | Protection |
+|---------|-------|------------|
+| `main` | Production | PR obligatoire + 1 review + CI must pass. Pas de push direct. |
+| `develop` | Intégration | Base des fonctionnalités. PR depuis feature/fix. |
+| `feature/*` ou `fix/*` | Développement | Branchée depuis `develop`. |
+
+### Étapes
+
+1. **Partir de `develop`** : `git checkout develop && git pull && git checkout -b feat/ma-feature`
 2. **Développer** dans les sous-modules concernés (`edr/` ou `site_lockbits/`)
 3. **Tester** localement
 4. **Commit** avec un message clair
-5. **Push** et créer une Pull Request sur `main`
+5. **Push** et créer une Pull Request **vers `develop`**
+6. Une fois mergé dans `develop` → CI build les images `:develop` → Watchtower met à jour la **preprod** automatiquement
+7. QA validée → PR de `develop` vers `main` → CI build les images `:latest` → Watchtower met à jour la **prod** automatiquement
 
 ### Nommage des branches
 
@@ -106,6 +129,8 @@ curl http://localhost:8080/
 - Exemple : `feat: add rate limiting on /api/v1/scan`
 - Exemple : `fix: restrict CORS origins in production`
 - Un commit = une modification logique
+- **Ne jamais push directement sur `main`** (protégé)
+- Toujours partir de `develop` pour les branches feature/fix
 
 ## Tests
 
@@ -128,24 +153,44 @@ Les tests du site sont effectués via smoke tests dans la CI.
 
 ## CI/CD
 
-Le workflow CI est défini dans `.github/workflows/build-and-push.yml` :
+Le workflow CI est défini dans `.github/workflows/build-and-push.yml` et se déclenche sur 3 événements :
+
+| Événement | Tests | Build & Push | Tag GHCR |
+|-----------|-------|-------------|----------|
+| Push `main` | ✅ | ✅ | `:latest` |
+| Push `develop` | ✅ | ✅ | `:develop` |
+| PR vers `main` ou `develop` | ✅ | ❌ | — |
+
+Pipeline :
 
 ```
 test-edr-unit → test-edr-integration → build-edr (GHCR)
 test-site-smoke ──────────────────────→ build-site (GHCR)
 ```
 
-- Les tests sont exécutés sur chaque push
-- Les images Docker sont publiées sur `ghcr.io/lockbits-esgi/*`
+- Tests exécutés sur chaque push **et** chaque PR
+- Build & Push uniquement sur push (pas sur PR)
 - Multi-arch : `linux/amd64` + `linux/arm64`
+
+### Mise à jour automatique (Watchtower)
+
+Les stacks prod et preprod incluent **Watchtower** qui vérifie les nouvelles images toutes les 5 minutes et redémarre les containers automatiquement. Plus besoin de cron ou d'intervention manuelle.
 
 ## Créer une Pull Request
 
+### Vers `develop` (features)
+
 1. Assurez-vous que les tests passent
-2. Mettez à jour la documentation si nécessaire
-3. Créez la PR vers `main`
-4. Décrivez clairement les changements
-5. Liez l'issue correspondante (ex: `Closes #42`)
+2. Créez la PR depuis votre branche `feature/*` vers `develop`
+3. Décrivez clairement les changements
+4. Liez l'issue correspondante (ex: `Closes #42`)
+
+### Vers `main` (release)
+
+1. La PR doit venir de `develop` (pas de feature directe vers main)
+2. Les status checks CI doivent passer
+3. Une review approuvée est requise (protection de branche)
+4. La branche doit être à jour avec `main`
 
 ### Template de PR
 
