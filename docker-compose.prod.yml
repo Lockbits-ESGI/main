@@ -23,6 +23,7 @@ services:
       AUTH_TOKEN: ${EDR_AUTH_TOKEN:-}
       VT_ENABLED: ${VT_ENABLED:-false}
       VT_API_KEY: ${VT_API_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - edr_data:/app/data
