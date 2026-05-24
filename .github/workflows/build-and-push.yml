@@ -261,7 +261,7 @@ jobs:
       - name: Run Gitleaks (OSS — no license required)
         uses: docker://ghcr.io/gitleaks/gitleaks:latest
         with:
-          args: detect --source . --no-git --verbose
+          args: detect --source . --verbose
 
   trivy-scan:
     name: "🔍 Trivy · Docker image scan"
