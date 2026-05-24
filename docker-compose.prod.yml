@@ -54,7 +54,7 @@ services:
       echo '>>> Waiting for database...' &&
       sleep 3 &&
       echo '>>> Initializing database schema...' &&
-      mysql -h site-db -u "$$DB_USER" -p"$$DB_PASS" "$$DB_NAME"
+      mysql -h site-db --ssl-mode=DISABLED -u "$$DB_USER" -p"$$DB_PASS" "$$DB_NAME"
         < /var/www/html/client/database.sql &&
       echo '>>> Database initialized successfully'
     networks:
