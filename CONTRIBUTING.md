@@ -164,13 +164,28 @@ Le workflow CI est défini dans `.github/workflows/build-and-push.yml` et se dé
 Pipeline :
 
 ```
-test-edr-unit → test-edr-integration → build-edr (GHCR)
-test-site-smoke ──────────────────────→ build-site (GHCR)
+test-edr-unit → test-edr-integration → build-edr (GHCR) ──┐
+test-site-smoke ──────────────────────→ build-site (GHCR) ──┤
+                                                            ↓
+secret-scan (parallel, all branches)                  trivy-scan (CRITICAL+HIGH)
 ```
 
 - Tests exécutés sur chaque push **et** chaque PR
 - Build & Push uniquement sur push (pas sur PR)
 - Multi-arch : `linux/amd64` + `linux/arm64`
+- 🔐 **Secret scanning** (Gitleaks) : exécuté en parallèle sur chaque push/PR
+- 🔍 **Trivy** : scan des images Docker après publication, fail sur CRITICAL/HIGH
+
+### Dependabot
+
+La configuration Dependabot est dans `.github/dependabot.yml` :
+
+| Écosystème | Directory | Fréquence |
+|------------|-----------|-----------|
+| pip (EDR) | `/edr` | Hebdomadaire (lundi) |
+| Docker (EDR) | `/docker/edr` | Hebdomadaire (lundi) |
+| Docker (Site) | `/site_lockbits` | Hebdomadaire (lundi) |
+| GitHub Actions | `/` | Hebdomadaire (lundi) |
 
 ### Mise à jour automatique (Watchtower)
 

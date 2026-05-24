@@ -1,0 +1,75 @@
+# Dependabot configuration
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+# Also managed by LockBits Security Policy (SECURITY.md)
+
+version: 2
+updates:
+
+  # ── Python (pip) — EDR backend ──────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/edr"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    reviewers:
+      - "cleeryy"
+    groups:
+      python-packages:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ── Docker — EDR backend ───────────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/docker/edr"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # ── Docker — Site web (PHP) ────────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/site_lockbits"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # ── GitHub Actions ─────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Paris"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      actions:
+        patterns:
+          - "*"
