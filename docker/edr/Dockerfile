@@ -16,8 +16,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Runtime dependencies only
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Runtime dependencies only — upgrade applies security patches to base image
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
