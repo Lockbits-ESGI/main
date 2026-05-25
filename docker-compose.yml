@@ -44,7 +44,7 @@ services:
       DB_PORT: "3306"
       DB_NAME: ${DB_NAME:-lockbits_client}
       DB_USER: ${DB_USER:-lockbits}
-      DB_PASS: ${DB_PASS:-lockbits_password}
+      DB_PASS: ${DB_PASS:?DB_PASS is required}
       APP_NAME: ${APP_NAME:-LockBits Client Area}
       APP_ENV: ${APP_ENV:-production}
       GLPI_API_URL: ${GLPI_API_URL:-}
@@ -76,10 +76,10 @@ services:
     ports:
       - "${DB_EXPOSE_PORT:-3307}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}
       MYSQL_DATABASE: ${DB_NAME:-lockbits_client}
       MYSQL_USER: ${DB_USER:-lockbits}
-      MYSQL_PASSWORD: ${DB_PASS:-lockbits_password}
+      MYSQL_PASSWORD: ${DB_PASS:?DB_PASS is required}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./site_lockbits/client/database.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
