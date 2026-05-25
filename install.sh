@@ -233,6 +233,43 @@ else
     info ".env conservé"
 fi
 
+# ── 4.5. Validation de sécurité ─────────────────────────────────────────────
+if [ -f .env ]; then
+    header "Validation de sécurité"
+
+    # Vérifier les mots de passe par défaut
+    DEFAULT_PASSWORDS=0
+    if grep -q "DB_PASS=lockbits_password" .env 2>/dev/null; then
+        warn "DB_PASS utilise encore le mot de passe par défaut 'lockbits_password'"
+        DEFAULT_PASSWORDS=1
+    fi
+    if grep -q "DB_ROOT_PASSWORD=root_password" .env 2>/dev/null; then
+        warn "DB_ROOT_PASSWORD utilise encore le mot de passe par défaut 'root_password'"
+        DEFAULT_PASSWORDS=1
+    fi
+    if grep -q "EDR_DB_PASS=changeme" .env 2>/dev/null || grep -q "EDR_DB_PASS=$" .env 2>/dev/null; then
+        warn "EDR_DB_PASS n'a pas été configuré"
+        DEFAULT_PASSWORDS=1
+    fi
+    if grep -q "EDR_AUTH_TOKEN=$" .env 2>/dev/null || grep -q "^EDR_AUTH_TOKEN=$" .env 2>/dev/null; then
+        warn "EDR_AUTH_TOKEN est vide — l'API EDR sera inaccessible en production"
+        DEFAULT_PASSWORDS=1
+    fi
+
+    if [ "$DEFAULT_PASSWORDS" -eq 1 ]; then
+        echo ""
+        warn "⚠  Des mots de passe par défaut ou manquants ont été détectés."
+        warn "   Éditez .env et remplacez 'changeme', 'lockbits_password', 'root_password'"
+        warn "   par des mots de passe forts avant de déployer en production."
+        echo ""
+        if [ "$MODE" = "install" ] && [ "$ENV_TARGET" = "prod" ]; then
+            error "Corrigez les mots de passe dans .env avant de continuer, ou utilisez --env=preprod"
+        fi
+    else
+        info "Tous les secrets sont configurés"
+    fi
+fi
+
 # ── 5. Connexion GHCR ──────────────────────────────────────────────────────
 if [ "$MODE" = "install" ]; then
     header "Connexion au registry"
