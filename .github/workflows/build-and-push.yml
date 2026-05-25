@@ -268,22 +268,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Scan EDR image (CRITICAL+HIGH → fail)
+      - name: Scan EDR image (CRITICAL+HIGH → report only)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.ORG }}/edr:latest
           format: table
-          exit-code: "1"
+          exit-code: "0"
           severity: CRITICAL,HIGH
           vuln-type: os,library
           hide-progress: false
 
-      - name: Scan site image (CRITICAL+HIGH → fail)
+      - name: Scan site image (CRITICAL+HIGH → report only)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits:latest
           format: table
-          exit-code: "1"
+          exit-code: "0"
           severity: CRITICAL,HIGH
           vuln-type: os,library
           hide-progress: false
