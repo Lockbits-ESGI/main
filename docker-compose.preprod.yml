@@ -162,17 +162,6 @@ services:
           cpus: "1"
           memory: 1G
 
-  # ── Watchtower — Mise à jour automatique ──────────────────────────────
-  # Utilise le fork maintenu de watchtower (containrrr/watchtower est archivé).
-  # https://github.com/nicholas-fedor/watchtower
-  watchtower:
-    image: nickfedor/watchtower
-    container_name: lockbits_watchtower_preprod
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 --cleanup
-    restart: unless-stopped
-
   # ── Prometheus — Métriques ──────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
