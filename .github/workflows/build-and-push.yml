@@ -12,9 +12,32 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STAGE 1 — Tests
+# STAGE 0 — Lint & Format
 # ─────────────────────────────────────────────────────────────────────────────
 jobs:
+
+  lint-edr:
+    name: "EDR · Ruff lint + format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Ruff check
+        working-directory: edr
+        run: ruff check --output-format=github
+
+      - name: Ruff format check
+        working-directory: edr
+        run: ruff format --check
 
   test-edr-unit:
     name: "EDR · Unit tests"
