@@ -34,8 +34,8 @@ LockBits-main/
 │   └── docs/             # Documentation
 ├── .github/workflows/    # CI/CD GitHub Actions
 ├── docker-compose.yml    # Dev stack
-├── docker-compose.prod.yml       # Prod stack (images :latest + Watchtower)
-├── docker-compose.preprod.yml    # Preprod stack (images :develop + Watchtower)
+├── docker-compose.prod.yml       # Prod stack (images :latest + nickfedor/watchtower)
+├── docker-compose.preprod.yml    # Preprod stack (images :develop + nickfedor/watchtower)
 └── install.sh            # One-liner deploy (--env=prod|preprod)
 ```
 
@@ -93,8 +93,8 @@ fix/*     ──PR──→ develop ╱
 3. **Tester** localement
 4. **Commit** avec un message clair
 5. **Push** et créer une Pull Request **vers `develop`**
-6. Une fois mergé dans `develop` → CI build les images `:develop` → Watchtower met à jour la **preprod** automatiquement
-7. QA validée → PR de `develop` vers `main` → CI build les images `:latest` → Watchtower met à jour la **prod** automatiquement
+6. Une fois mergé dans `develop` → CI build les images `:develop` → **nickfedor/watchtower** met à jour la **preprod** automatiquement
+7. QA validée → PR de `develop` vers `main` → CI build les images `:latest` → **nickfedor/watchtower** met à jour la **prod** automatiquement
 
 ### Nommage des branches
 
@@ -164,17 +164,33 @@ Le workflow CI est défini dans `.github/workflows/build-and-push.yml` et se dé
 Pipeline :
 
 ```
-test-edr-unit → test-edr-integration → build-edr (GHCR)
-test-site-smoke ──────────────────────→ build-site (GHCR)
+test-edr-unit → test-edr-integration → build-edr (GHCR) ──┐
+test-site-smoke ──────────────────────→ build-site (GHCR) ──┤
+                                                             ↓
+                                                      trivy-scan (CRITICAL+HIGH)
 ```
 
 - Tests exécutés sur chaque push **et** chaque PR
 - Build & Push uniquement sur push (pas sur PR)
 - Multi-arch : `linux/amd64` + `linux/arm64`
+- 🔍 **Trivy** : scan des images Docker après publication, fail sur CRITICAL/HIGH
 
-### Mise à jour automatique (Watchtower)
+### Dependabot
 
-Les stacks prod et preprod incluent **Watchtower** qui vérifie les nouvelles images toutes les 5 minutes et redémarre les containers automatiquement. Plus besoin de cron ou d'intervention manuelle.
+La configuration Dependabot est dans `.github/dependabot.yml` :
+
+| Écosystème | Directory | Fréquence |
+|------------|-----------|-----------|
+| pip (EDR) | `/edr` | Hebdomadaire (lundi) |
+| Docker (EDR) | `/docker/edr` | Hebdomadaire (lundi) |
+| Docker (Site) | `/site_lockbits` | Hebdomadaire (lundi) |
+| GitHub Actions | `/` | Hebdomadaire (lundi) |
+
+### Mise à jour automatique (nickfedor/watchtower)
+
+Les stacks prod et preprod incluent **Watchtower** (fork maintenu [nickfedor/watchtower](https://github.com/nicholas-fedor/watchtower)) qui vérifie les nouvelles images toutes les 5 minutes et redémarre les containers automatiquement. Plus besoin de cron ou d'intervention manuelle.
+
+> ⚠️ L'original `containrrr/watchtower` est [archivé](https://github.com/containrrr/watchtower) et son client Docker n'est plus compatible avec les API récentes.
 
 ## Créer une Pull Request
 

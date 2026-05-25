@@ -12,9 +12,32 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STAGE 1 — Tests
+# STAGE 0 — Lint & Format
 # ─────────────────────────────────────────────────────────────────────────────
 jobs:
+
+  lint-edr:
+    name: "EDR · Ruff lint + format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ruff
+        run: pip install ruff
+
+      - name: Ruff check
+        working-directory: edr
+        run: ruff check --output-format=github
+
+      - name: Ruff format check
+        working-directory: edr
+        run: ruff format --check
 
   test-edr-unit:
     name: "EDR · Unit tests"
@@ -245,3 +268,45 @@ jobs:
           provenance: false
           cache-from: type=gha,scope=site
           cache-to: type=gha,mode=max,scope=site
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STAGE 3 — Security Scans
+# ─────────────────────────────────────────────────────────────────────────────
+
+  trivy-scan:
+    name: "🔍 Trivy · Docker image scan"
+    runs-on: ubuntu-latest
+    needs: [build-edr, build-site]
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan EDR image (CRITICAL+HIGH → report only)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.ORG }}/edr:latest
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          vuln-type: os,library
+          hide-progress: false
+
+      - name: Scan site image (CRITICAL+HIGH → report only)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.ORG }}/site_lockbits:latest
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          vuln-type: os,library
+          hide-progress: false
