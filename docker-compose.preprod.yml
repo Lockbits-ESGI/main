@@ -141,7 +141,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASS:?DB_PASS is required}
     volumes:
       - mysql_data_preprod:/var/lib/mysql
-      - db_init_scripts_preprod/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - db_init_scripts_preprod:/docker-entrypoint-initdb.d
     networks:
       - backend
     restart: unless-stopped
