@@ -72,26 +72,15 @@ services:
           memory: 256M
 
   # ── Initialisation automatique de la base de données ──────────────────────
-  # S'exécute une fois au premier déploiement (idempotent).
-  # Utilise l'image site_lockbits qui contient mysql CLI + database.sql.
+  # Copie database.sql vers un volume partagé pour que MySQL l'exécute
+  # automatiquement via docker-entrypoint-initdb.d au premier démarrage.
   db-init:
     image: ghcr.io/lockbits-esgi/site_lockbits:latest
     container_name: lockbits_init
     pull_policy: always
-    depends_on:
-      site-db:
-        condition: service_healthy
-    environment:
-      DB_USER: ${DB_USER:-lockbits}
-      DB_PASS: ${DB_PASS:?DB_PASS is required}
-      DB_NAME: ${DB_NAME:-lockbits_client}
-    entrypoint: >
-      echo '>>> Waiting for database...' &&
-      sleep 3 &&
-      echo '>>> Initializing database schema...' &&
-      mysql -h site-db --ssl-mode=DISABLED -u "$$DB_USER" -p"$$DB_PASS" "$$DB_NAME"
-        < /var/www/html/client/database.sql &&
-      echo '>>> Database initialized successfully'
+    entrypoint: ["cp", "/var/www/html/client/database.sql", "/scripts/01-schema.sql"]
+    volumes:
+      - db_init_scripts:/scripts
     networks:
       - backend
     restart: "no"
@@ -102,8 +91,8 @@ services:
     container_name: lockbits_web
     pull_policy: always
     depends_on:
-      db-init:
-        condition: service_completed_successfully
+      site-db:
+        condition: service_healthy
     ports:
       - "${WEB_PORT:-8080}:80"
     environment:
@@ -143,6 +132,9 @@ services:
   site-db:
     image: mysql:8.0
     container_name: lockbits_db
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}
       MYSQL_DATABASE: ${DB_NAME:-lockbits_client}
@@ -150,6 +142,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASS:?DB_PASS is required}
     volumes:
       - mysql_data:/var/lib/mysql
+      - db_init_scripts/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     networks:
       - backend
     restart: unless-stopped
@@ -314,6 +307,8 @@ services:
 
 volumes:
   mysql_data:
+    driver: local
+  db_init_scripts:
     driver: local
   edr_data:
     driver: local
