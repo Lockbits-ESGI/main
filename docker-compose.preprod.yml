@@ -22,7 +22,7 @@ services:
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "8000"
       DATABASE_URL: ${EDR_DATABASE_URL:-postgresql+asyncpg://${EDR_DB_USER:-edr}:${EDR_DB_PASS:?EDR_DB_PASS is required}@edr-db/${EDR_DB_NAME:-edr}}
-      AUTH_TOKEN: ${EDR_AUTH_TOKEN:?EDR_AUTH_TOKEN is required in production}
+      AUTH_TOKEN: ${EDR_AUTH_TOKEN:-}
       VT_ENABLED: ${VT_ENABLED:-false}
       VT_API_KEY: ${VT_API_KEY:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
@@ -52,7 +52,7 @@ services:
     environment:
       POSTGRES_DB: ${EDR_DB_NAME:-edr}
       POSTGRES_USER: ${EDR_DB_USER:-edr}
-      POSTGRES_PASSWORD: ${EDR_DB_PASS:?EDR_DB_PASS is required}
+      POSTGRES_PASSWORD: ${EDR_DB_PASS:-edr_preprod}
     volumes:
       - edr_db_data_preprod:/var/lib/postgresql/data
     networks:
