@@ -83,7 +83,7 @@ services:
       - db_init_scripts:/scripts
     networks:
       - backend
-    restart: "no"
+    restart: "on-failure"
 
   # ── LockBits Site (PHP/Apache) ────────────────────────────────────────────
   site-web:
