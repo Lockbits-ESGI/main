@@ -34,8 +34,8 @@ LockBits-main/
 │   └── docs/             # Documentation
 ├── .github/workflows/    # CI/CD GitHub Actions
 ├── docker-compose.yml    # Dev stack
-├── docker-compose.prod.yml       # Prod stack (images :latest + Watchtower)
-├── docker-compose.preprod.yml    # Preprod stack (images :develop + Watchtower)
+├── docker-compose.prod.yml       # Prod stack (images :latest + nickfedor/watchtower)
+├── docker-compose.preprod.yml    # Preprod stack (images :develop + nickfedor/watchtower)
 └── install.sh            # One-liner deploy (--env=prod|preprod)
 ```
 
@@ -93,8 +93,8 @@ fix/*     ──PR──→ develop ╱
 3. **Tester** localement
 4. **Commit** avec un message clair
 5. **Push** et créer une Pull Request **vers `develop`**
-6. Une fois mergé dans `develop` → CI build les images `:develop` → Watchtower met à jour la **preprod** automatiquement
-7. QA validée → PR de `develop` vers `main` → CI build les images `:latest` → Watchtower met à jour la **prod** automatiquement
+6. Une fois mergé dans `develop` → CI build les images `:develop` → **nickfedor/watchtower** met à jour la **preprod** automatiquement
+7. QA validée → PR de `develop` vers `main` → CI build les images `:latest` → **nickfedor/watchtower** met à jour la **prod** automatiquement
 
 ### Nommage des branches
 
@@ -186,9 +186,11 @@ La configuration Dependabot est dans `.github/dependabot.yml` :
 | Docker (Site) | `/site_lockbits` | Hebdomadaire (lundi) |
 | GitHub Actions | `/` | Hebdomadaire (lundi) |
 
-### Mise à jour automatique (Watchtower)
+### Mise à jour automatique (nickfedor/watchtower)
 
-Les stacks prod et preprod incluent **Watchtower** qui vérifie les nouvelles images toutes les 5 minutes et redémarre les containers automatiquement. Plus besoin de cron ou d'intervention manuelle.
+Les stacks prod et preprod incluent **Watchtower** (fork maintenu [nickfedor/watchtower](https://github.com/nicholas-fedor/watchtower)) qui vérifie les nouvelles images toutes les 5 minutes et redémarre les containers automatiquement. Plus besoin de cron ou d'intervention manuelle.
+
+> ⚠️ L'original `containrrr/watchtower` est [archivé](https://github.com/containrrr/watchtower) et son client Docker n'est plus compatible avec les API récentes.
 
 ## Créer une Pull Request
 
