@@ -1,10 +1,20 @@
 # Déploiement preprod — tire les images depuis ghcr.io avec le tag :develop.
+# MySQL est géré par un service Dokploy dédié (externe à ce compose).
 # Usage :
 #   docker compose -f docker-compose.preprod.yml up -d
 #
+# Variables OBLIGATOIRES dans Dokploy :
+#   DB_PASS
+#   DB_HOST (hostname du MySQL Dokploy, ex: host.docker.internal)
+#
+# Ports par défaut (preprod) :
+#   site-web  → 8080   EDR  → 8001
+#   Prometheus → 9090  Grafana → 3001
+#   MySQL Dokploy externe → 3366 (à configurer dans le service Dokploy MySQL)
+#
 # Architecture réseau :
 #   frontend ── edr-server, site-web    (ports exposés)
-#   backend  ── site-web, site-db       (interne, aucun port exposé)
+#   backend  ── edr-server, edr-db      (interne)
 
 services:
 
@@ -70,33 +80,26 @@ services:
           cpus: "0.5"
           memory: 256M
 
-  # ── Initialisation automatique de la base de données ──────────────────────
-  # Copie database.sql vers un volume partagé pour que MySQL l'exécute
-  # automatiquement via docker-entrypoint-initdb.d au premier démarrage.
-  db-init:
-    image: ghcr.io/lockbits-esgi/site_lockbits:develop
-    container_name: lockbits_init_preprod
-    pull_policy: always
-    entrypoint: ["cp", "/var/www/html/client/database.sql", "/scripts/01-schema.sql"]
-    volumes:
-      - db_init_scripts_preprod:/scripts
-    networks:
-      - backend
-    restart: "no"
-
   # ── LockBits Site (PHP/Apache) ────────────────────────────────────────────
+  # Le docker-entrypoint.sh attend MySQL (DB_HOST:DB_PORT) et initialise
+  # le schéma automatiquement si les tables sont absentes.
+  #
+  # MySQL externe (service Dokploy) : exposé sur le port 3366 de l'hôte.
+  # Dans Dokploy, configurer :
+  #   MYSQL_DATABASE=lockbits_client
+  #   MYSQL_USER=lockbits
+  #   MYSQL_PASSWORD=<DB_PASS>
   site-web:
     image: ghcr.io/lockbits-esgi/site_lockbits:develop
     container_name: lockbits_web_preprod
     pull_policy: always
-    depends_on:
-      site-db:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${WEB_PORT:-8080}:80"
     environment:
-      DB_HOST: site-db
-      DB_PORT: "3306"
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-3366}
       DB_NAME: ${DB_NAME:-lockbits_client}
       DB_USER: ${DB_USER:-lockbits}
       DB_PASS: ${DB_PASS:?DB_PASS is required}
@@ -113,7 +116,6 @@ services:
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
     networks:
       - frontend
-      - backend
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
@@ -126,36 +128,6 @@ services:
         limits:
           cpus: "0.5"
           memory: 256M
-
-  # ── MySQL (for the site) ──────────────────────────────────────────────────
-  site-db:
-    image: mysql:8.0
-    container_name: lockbits_db_preprod
-    depends_on:
-      db-init:
-        condition: service_completed_successfully
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}
-      MYSQL_DATABASE: ${DB_NAME:-lockbits_client}
-      MYSQL_USER: ${DB_USER:-lockbits}
-      MYSQL_PASSWORD: ${DB_PASS:?DB_PASS is required}
-    volumes:
-      - mysql_data_preprod:/var/lib/mysql
-      - db_init_scripts_preprod:/docker-entrypoint-initdb.d
-    networks:
-      - backend
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: "1"
-          memory: 1G
 
   # ── Prometheus — Métriques ──────────────────────────────────────────────
   prometheus:
@@ -294,10 +266,6 @@ services:
           memory: 128M
 
 volumes:
-  mysql_data_preprod:
-    driver: local
-  db_init_scripts_preprod:
-    driver: local
   edr_data_preprod:
     driver: local
   edr_db_data_preprod:
