@@ -413,10 +413,30 @@ jobs:
           vuln-type: os,library
           hide-progress: false
 
+      - uses: docker/metadata-action@v5
+        id: meta-edr-agent
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.ORG }}/edr-agent
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Resolve EDR agent image ref for scanning
+        id: resolve-edr-agent-tag
+        run: |
+          FIRST_TAG=$(echo "${{ steps.meta-edr-agent.outputs.tags }}" | head -1)
+          echo "image_ref=${FIRST_TAG}" >> "$GITHUB_OUTPUT"
+
       - name: Scan EDR agent image (CRITICAL+HIGH → report only)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.ORG }}/edr-agent:latest
+          image-ref: ${{ steps.resolve-edr-agent-tag.outputs.image_ref }}
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          vuln-type: os,library
+          hide-progress: false
           format: table
           exit-code: "0"
           severity: CRITICAL,HIGH
