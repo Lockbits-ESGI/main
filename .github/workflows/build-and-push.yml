@@ -437,3 +437,8 @@ jobs:
           severity: CRITICAL,HIGH
           vuln-type: os,library
           hide-progress: false
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          vuln-type: os,library
+          hide-progress: false

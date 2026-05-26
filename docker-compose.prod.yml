@@ -103,6 +103,7 @@ services:
       DB_NAME: ${DB_NAME:-lockbits_client}
       DB_USER: ${DB_USER:-lockbits}
       DB_PASS: ${DB_PASS:?DB_PASS is required}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-}
       APP_NAME: ${APP_NAME:-LockBits Client Area}
       APP_ENV: ${APP_ENV:-production}
       GLPI_API_URL: ${GLPI_API_URL:-}
