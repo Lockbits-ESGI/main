@@ -240,7 +240,7 @@ services:
         local.file_match "docker" {
           path_targets = [{
             __address__ = "localhost",
-            path        = "/var/lib/docker/containers/*/*-json.log"
+            path        = "/var/lib/docker/containers/*/*-json.log",
           }]
         }
         loki.source.file "docker" {
