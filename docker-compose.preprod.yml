@@ -146,7 +146,9 @@ services:
       - '--web.enable-lifecycle'
     volumes:
       - prometheus_data_preprod:/prometheus
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
     networks:
       - monitoring
     restart: unless-stopped
@@ -290,3 +292,17 @@ networks:
     driver: bridge
   monitoring:
     driver: bridge
+
+configs:
+  prometheus_config:
+    content: |
+      global:
+        scrape_interval: 15s
+      scrape_configs:
+        - job_name: "lockbits_edr"
+          metrics_path: "/metrics"
+          static_configs:
+            - targets: ["edr-server:8000"]
+        - job_name: "prometheus"
+          static_configs:
+            - targets: ["localhost:9090"]
