@@ -42,6 +42,7 @@ services:
     networks:
       - frontend
       - backend
+      - monitoring
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -145,6 +146,7 @@ services:
       - '--web.enable-lifecycle'
     volumes:
       - prometheus_data_preprod:/prometheus
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
       - monitoring
     restart: unless-stopped
