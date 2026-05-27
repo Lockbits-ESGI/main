@@ -142,7 +142,7 @@ services:
       - sh
       - -c
       - |
-        cat > /etc/prometheus/prometheus.yml << 'PROMEOF'
+        cat > /prometheus/prometheus.yml << 'PROMEOF'
         global:
           scrape_interval: 15s
         scrape_configs:
@@ -154,7 +154,7 @@ services:
             static_configs:
               - targets: ["localhost:9090"]
         PROMEOF
-        exec prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/etc/prometheus/console_libraries --web.console.templates=/etc/prometheus/consoles --web.enable-lifecycle
+        exec prometheus --config.file=/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/etc/prometheus/console_libraries --web.console.templates=/etc/prometheus/consoles --web.enable-lifecycle
     volumes:
       - prometheus_data:/prometheus
     networks:
