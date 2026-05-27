@@ -138,17 +138,25 @@ services:
     pull_policy: always
     ports:
       - "${PROMETHEUS_PORT:-9092}:9090"
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
+    entrypoint:
+      - sh
+      - -c
+      - |
+        cat > /etc/prometheus/prometheus.yml << 'PROMEOF'
+        global:
+          scrape_interval: 15s
+        scrape_configs:
+          - job_name: "lockbits_edr"
+            metrics_path: "/metrics"
+            static_configs:
+              - targets: ["edr-server:8000"]
+          - job_name: "prometheus"
+            static_configs:
+              - targets: ["localhost:9090"]
+        PROMEOF
+        exec prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/etc/prometheus/console_libraries --web.console.templates=/etc/prometheus/consoles --web.enable-lifecycle
     volumes:
       - prometheus_data:/prometheus
-    configs:
-      - source: prometheus_config
-        target: /etc/prometheus/prometheus.yml
     networks:
       - monitoring
     restart: unless-stopped
@@ -292,17 +300,3 @@ networks:
     driver: bridge
   monitoring:
     driver: bridge
-
-configs:
-  prometheus_config:
-    content: |
-      global:
-        scrape_interval: 15s
-      scrape_configs:
-        - job_name: "lockbits_edr"
-          metrics_path: "/metrics"
-          static_configs:
-            - targets: ["edr-server:8000"]
-        - job_name: "prometheus"
-          static_configs:
-            - targets: ["localhost:9090"]
