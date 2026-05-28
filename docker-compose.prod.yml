@@ -37,6 +37,15 @@ services:
       VT_API_KEY: ${VT_API_KEY:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      GLPI_ENABLED: ${GLPI_ENABLED:-false}
+      GLPI_API_URL: ${GLPI_API_URL:-https://glpi.lockbits.pro/api.php/v2.2}
+      GLPI_WEB_URL: ${GLPI_WEB_URL:-https://glpi.lockbits.pro}
+      GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
+      GLPI_USER_TOKEN: ${GLPI_USER_TOKEN:-}
+      GLPI_OAUTH_CLIENT_ID: ${GLPI_OAUTH_CLIENT_ID:-}
+      GLPI_OAUTH_CLIENT_SECRET: ${GLPI_OAUTH_CLIENT_SECRET:-}
+      GLPI_API_USERNAME: ${GLPI_API_USERNAME:-}
+      GLPI_API_PASSWORD: ${GLPI_API_PASSWORD:-}
     volumes:
       - edr_data:/app/data
     networks:
