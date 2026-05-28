@@ -147,6 +147,7 @@ services:
           scrape_interval: 15s
         scrape_configs:
           - job_name: "lockbits_edr"
+            scrape_interval: 1s
             metrics_path: "/metrics"
             static_configs:
               - targets: ["edr-server:8000"]
