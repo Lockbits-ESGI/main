@@ -138,24 +138,12 @@ services:
     pull_policy: always
     ports:
       - "${PROMETHEUS_PORT:-9092}:9090"
-    entrypoint:
-      - sh
-      - -c
-      - |
-        cat > /prometheus/prometheus.yml << 'PROMEOF'
-        global:
-          scrape_interval: 15s
-        scrape_configs:
-          - job_name: "lockbits_edr"
-            scrape_interval: 1s
-            metrics_path: "/metrics"
-            static_configs:
-              - targets: ["edr-server:8000"]
-          - job_name: "prometheus"
-            static_configs:
-              - targets: ["localhost:9090"]
-        PROMEOF
-        exec prometheus --config.file=/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/etc/prometheus/console_libraries --web.console.templates=/etc/prometheus/consoles --web.enable-lifecycle
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.enable-lifecycle
     volumes:
       - prometheus_data:/prometheus
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
