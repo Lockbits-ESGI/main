@@ -2,10 +2,9 @@ name: Auto-update submodules
 
 on:
   schedule:
-    # Toutes les heures — vérifie si les submodules ont de nouveaux commits
-    - cron: "0 * * * *"
+    # Une fois par jour à 6h UTC — les submodules n'avancent pas si vite
+    - cron: "0 6 * * *"
   workflow_dispatch:
-    # Permet un déclenchement manuel depuis l'interface GitHub
 
 jobs:
   update:
@@ -18,6 +17,7 @@ jobs:
       - name: Checkout with submodules
         uses: actions/checkout@v6
         with:
+          ref: develop
           submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,4 +43,4 @@ jobs:
           git config user.email "bot@lockbits-esgi"
           git add -u
           git commit -m "chore: auto-update submodules"
-          git push origin main
+          git push origin develop
