@@ -209,7 +209,7 @@ services:
       - monitoring
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "/usr/bin/loki", "-health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3100/ready"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -225,28 +225,11 @@ services:
     image: grafana/alloy:latest
     container_name: lockbits_alloy_preprod
     pull_policy: always
-    entrypoint:
-      - sh
-      - -c
-      - |
-        printf 'loki.write "default" {
-          endpoint {
-            url = "http://loki:3100/loki/api/v1/push"
-          }
-        }
-        local.file_match "docker" {
-          path_targets = [{
-            __address__ = "localhost",
-            path        = "/var/lib/docker/containers/*/*-json.log",
-          }]
-        }
-        loki.source.file "docker" {
-          targets    = local.file_match.docker.targets
-          forward_to = [loki.write.default.receiver]
-        }
-        ' > /etc/alloy/config.alloy
-        alloy run /etc/alloy/config.alloy
+    command:
+      - run
+      - /etc/alloy/config.alloy
     volumes:
+      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - monitoring
@@ -255,7 +238,7 @@ services:
       loki:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "http://localhost:12345/-/healthy"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:12345/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
