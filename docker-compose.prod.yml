@@ -208,12 +208,6 @@ services:
     networks:
       - monitoring
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3100/ready"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     deploy:
       resources:
         limits:
@@ -235,14 +229,7 @@ services:
       - monitoring
     restart: unless-stopped
     depends_on:
-      loki:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:12345/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
+      - loki
     deploy:
       resources:
         limits:
