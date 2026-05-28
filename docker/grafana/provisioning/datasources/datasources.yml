@@ -9,6 +9,11 @@ datasources:
     uid: prometheus
     jsonData:
       timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: POST
+      prometheusType: Prometheus
+      prometheusVersion: "2.50.x"
+      cacheLevel: Low
 
   - name: Loki
     type: loki
