@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "lockbits_edr"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["edr-server:8000"]
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
