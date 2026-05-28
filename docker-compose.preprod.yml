@@ -187,15 +187,10 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_DATASOURCES_PROMETHEUS_TYPE: prometheus
-      GF_DATASOURCES_PROMETHEUS_URL: http://prometheus:9090
-      GF_DATASOURCES_PROMETHEUS_ACCESS: proxy
-      GF_DATASOURCES_PROMETHEUS_ISDEFAULT: "true"
-      GF_DATASOURCES_LOKI_TYPE: loki
-      GF_DATASOURCES_LOKI_URL: http://loki:3100
-      GF_DATASOURCES_LOKI_ACCESS: proxy
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
       - grafana_data_preprod:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - frontend
       - monitoring
