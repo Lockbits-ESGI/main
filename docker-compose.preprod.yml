@@ -16,6 +16,11 @@
 #   frontend ── edr-server, site-web    (ports exposés)
 #   backend  ── edr-server, edr-db      (interne)
 
+# Le project name explicite garantit des réseaux Docker isolés de la prod.
+# Sans ça, Dokploy utilise le même nom de dossier pour les deux stacks →
+# les réseaux "monitoring" sont partagés → Prometheus round-robin entre prod et preprod.
+name: lockbits-preprod
+
 services:
 
   # ── EDR Server (FastAPI) ──────────────────────────────────────────────────
