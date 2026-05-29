@@ -16,6 +16,11 @@
 #   frontend ── edr-server, site-web    (ports exposés)
 #   backend  ── edr-server, edr-db      (interne)
 
+# Le project name explicite garantit des réseaux Docker isolés de la preprod.
+# Sans ça, Dokploy utilise le même nom de dossier pour les deux stacks →
+# les réseaux "monitoring" sont partagés → Prometheus round-robin entre prod et preprod.
+name: lockbits-prod
+
 services:
 
   # ── EDR Server (FastAPI) ──────────────────────────────────────────────────
@@ -157,7 +162,7 @@ services:
       - --web.enable-lifecycle
     volumes:
       - prometheus_data:/prometheus
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
     networks:
       - monitoring
     restart: unless-stopped
@@ -262,7 +267,10 @@ volumes:
 networks:
   frontend:
     driver: bridge
+    name: lockbits-prod_frontend
   backend:
     driver: bridge
+    name: lockbits-prod_backend
   monitoring:
     driver: bridge
+    name: lockbits-prod_monitoring
