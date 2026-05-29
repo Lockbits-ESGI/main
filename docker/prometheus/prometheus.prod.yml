@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "lockbits_edr"
+    metrics_path: "/metrics"
+    static_configs:
+      # On cible le container name et non le service name "edr-server".
+      # Le service name est enregistré comme alias DNS sur TOUS les réseaux
+      # partagés (y compris dokploy-network), ce qui provoque un round-robin
+      # entre prod et preprod. Le container name est unique sur l'hôte Docker.
+      - targets: ["lockbits_edr:8000"]
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

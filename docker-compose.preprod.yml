@@ -162,7 +162,7 @@ services:
       - --web.enable-lifecycle
     volumes:
       - prometheus_data_preprod:/prometheus
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/prometheus.preprod.yml:/etc/prometheus/prometheus.yml:ro
     networks:
       - monitoring
     restart: unless-stopped
