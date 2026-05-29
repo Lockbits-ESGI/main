@@ -1,23 +1,3 @@
-# Secrets & env
 .env
-.env.final
-.env.*.local
 *.env.local
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.ruff_cache/
-
-# Logs
-edr/logs/
-*.log
-
-# Build artifacts
-edr/dist/
-edr/build/
-*.spec
-
-# Backups
 backups/
