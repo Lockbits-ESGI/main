@@ -273,7 +273,10 @@ volumes:
 networks:
   frontend:
     driver: bridge
+    name: lockbits-preprod_frontend
   backend:
     driver: bridge
+    name: lockbits-preprod_backend
   monitoring:
     driver: bridge
+    name: lockbits-preprod_monitoring
