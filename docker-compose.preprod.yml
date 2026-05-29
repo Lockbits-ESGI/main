@@ -16,11 +16,6 @@
 #   frontend ── edr-server, site-web    (ports exposés)
 #   backend  ── edr-server, edr-db      (interne)
 
-# Le project name explicite garantit des réseaux Docker isolés de la prod.
-# Sans ça, Dokploy utilise le même nom de dossier pour les deux stacks →
-# les réseaux "monitoring" sont partagés → Prometheus round-robin entre prod et preprod.
-name: lockbits-preprod
-
 services:
 
   # ── EDR Server (FastAPI) ──────────────────────────────────────────────────
@@ -36,25 +31,12 @@ services:
     environment:
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "8000"
-      DATABASE_URL: ${EDR_DATABASE_URL:-postgresql://${EDR_DB_USER:-edr}:${EDR_DB_PASS:-edr_preprod}@edr-db/${EDR_DB_NAME:-edr}}
+      DATABASE_URL: ${EDR_DATABASE_URL:-postgresql+asyncpg://${EDR_DB_USER:-edr}:${EDR_DB_PASS:-edr_preprod}@edr-db/${EDR_DB_NAME:-edr}}
       AUTH_TOKEN: ${EDR_AUTH_TOKEN:-}
       VT_ENABLED: ${VT_ENABLED:-false}
       VT_API_KEY: ${VT_API_KEY:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      GLPI_ENABLED: ${GLPI_ENABLED:-false}
-      GLPI_API_URL: ${GLPI_API_URL:-https://glpi.lockbits.pro/api.php/v2.2}
-      GLPI_WEB_URL: ${GLPI_WEB_URL:-https://glpi.lockbits.pro}
-      GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
-      GLPI_USER_TOKEN: ${GLPI_USER_TOKEN:-}
-      GLPI_OAUTH_CLIENT_ID: ${GLPI_OAUTH_CLIENT_ID:-}
-      GLPI_OAUTH_CLIENT_SECRET: ${GLPI_OAUTH_CLIENT_SECRET:-}
-      GLPI_API_USERNAME: ${GLPI_API_USERNAME:-}
-      GLPI_API_PASSWORD: ${GLPI_API_PASSWORD:-}
-      GLPI_TICKET_ENTITY_ID: ${GLPI_TICKET_ENTITY_ID:-}
-      GLPI_TICKET_CATEGORY_ID: ${GLPI_TICKET_CATEGORY_ID:-}
-      GLPI_COMPANY_REQUESTER_TYPE: ${GLPI_COMPANY_REQUESTER_TYPE:-Group}
-      GLPI_ENTITY_RECURSIVE: ${GLPI_ENTITY_RECURSIVE:-true}
     volumes:
       - edr_data_preprod:/app/data
     networks:
@@ -133,10 +115,6 @@ services:
       GLPI_OAUTH_CLIENT_SECRET: ${GLPI_OAUTH_CLIENT_SECRET:-}
       GLPI_API_USERNAME: ${GLPI_API_USERNAME:-}
       GLPI_API_PASSWORD: ${GLPI_API_PASSWORD:-}
-      GLPI_TICKET_ENTITY_ID: ${GLPI_TICKET_ENTITY_ID:-}
-      GLPI_TICKET_CATEGORY_ID: ${GLPI_TICKET_CATEGORY_ID:-}
-      GLPI_COMPANY_REQUESTER_TYPE: ${GLPI_COMPANY_REQUESTER_TYPE:-Group}
-      GLPI_ENTITY_RECURSIVE: ${GLPI_ENTITY_RECURSIVE:-true}
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
     networks:
       - frontend
@@ -160,15 +138,26 @@ services:
     pull_policy: always
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-      - --web.console.libraries=/etc/prometheus/console_libraries
-      - --web.console.templates=/etc/prometheus/consoles
-      - --web.enable-lifecycle
+    entrypoint:
+      - sh
+      - -c
+      - |
+        cat > /prometheus/prometheus.yml << 'PROMEOF'
+        global:
+          scrape_interval: 15s
+        scrape_configs:
+          - job_name: "lockbits_edr"
+            metrics_path: "/metrics"
+            static_configs:
+              - targets: ["edr-server:8000"]
+          - job_name: "prometheus"
+            static_configs:
+              - targets: ["localhost:9090"]
+        PROMEOF
+        exec prometheus --config.file=/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/etc/prometheus/console_libraries --web.console.templates=/etc/prometheus/consoles --web.enable-lifecycle
     volumes:
       - prometheus_data_preprod:/prometheus
-      - ./docker/prometheus/prometheus.preprod.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
       - monitoring
     restart: unless-stopped
@@ -197,10 +186,15 @@ services:
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_DATASOURCES_PROMETHEUS_TYPE: prometheus
+      GF_DATASOURCES_PROMETHEUS_URL: http://prometheus:9090
+      GF_DATASOURCES_PROMETHEUS_ACCESS: proxy
+      GF_DATASOURCES_PROMETHEUS_ISDEFAULT: "true"
+      GF_DATASOURCES_LOKI_TYPE: loki
+      GF_DATASOURCES_LOKI_URL: http://loki:3100
+      GF_DATASOURCES_LOKI_ACCESS: proxy
     volumes:
       - grafana_data_preprod:/var/lib/grafana
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - frontend
       - monitoring
@@ -210,12 +204,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 15s
     deploy:
       resources:
         limits:
           cpus: "0.5"
-          memory: 1G
+          memory: 256M
 
   # ── Loki — Agrégation de logs ───────────────────────────────────────────
   loki:
@@ -230,6 +224,12 @@ services:
     networks:
       - monitoring
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/bin/loki", "-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -241,19 +241,37 @@ services:
     image: grafana/alloy:latest
     container_name: lockbits_alloy_preprod
     pull_policy: always
-    command:
-      - run
-      - /etc/alloy/config.alloy
+    entrypoint:
+      - sh
+      - -c
+      - |
+        printf 'loki.write "default" {
+          endpoint {
+            url = "http://loki:3100/loki/api/v1/push"
+          }
+        }
+        local.file_match "docker" {
+          path_targets = [{
+            __address__ = "localhost",
+            path        = "/var/lib/docker/containers/*/*-json.log",
+          }]
+        }
+        loki.source.file "docker" {
+          targets    = local.file_match.docker.targets
+          forward_to = [loki.write.default.receiver]
+        }
+        ' > /etc/alloy/config.alloy
+        alloy run /etc/alloy/config.alloy
     volumes:
-      - ./docker/alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - monitoring
     restart: unless-stopped
     depends_on:
-      - loki
+      loki:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:12345/-/healthy"]
+      test: ["CMD", "wget", "-q", "http://localhost:12345/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -279,10 +297,7 @@ volumes:
 networks:
   frontend:
     driver: bridge
-    name: lockbits-preprod_frontend
   backend:
     driver: bridge
-    name: lockbits-preprod_backend
   monitoring:
     driver: bridge
-    name: lockbits-preprod_monitoring
