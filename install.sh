@@ -137,7 +137,7 @@ if [ "$MODE" = "update-sources" ]; then
     fi
 
     info "Mise à jour des submodules..."
-    git submodule update --remote --merge
+    git submodule update --remote
 
     if git diff --quiet --exit-code; then
         info "Tous les submodules sont déjà à jour"

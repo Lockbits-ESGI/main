@@ -1,3 +1,30 @@
+# ── Environment ─────────────────────────────────────────────────────────
 .env
 *.env.local
 backups/
+
+# ── OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ── IDE / Editor ─────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ── Logs / Temp ──────────────────────────────────────────────────────────
+*.log
+tmp/
+temp/
