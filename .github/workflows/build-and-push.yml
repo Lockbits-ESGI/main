@@ -448,32 +448,35 @@ jobs:
     needs: [build-edr, build-site]
     if: github.event_name != 'pull_request'
     steps:
+      - name: Install curl_cffi
+        run: pip install curl_cffi
+
       - name: Trigger production deployment
         if: github.ref_name == 'main'
         run: |
-          echo "Triggering production deploy..."
-          HTTP_CODE=$(curl -X POST \
-            -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
-            -s -o /dev/null -w "%{http_code}" \
-            --retry 3 \
-            "${{ secrets.DOKPLOY_PROD_HOOK }}")
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "::error::Deploy failed with HTTP $HTTP_CODE"
-            exit 1
-          fi
-          echo "Deploy succeeded: HTTP $HTTP_CODE"
+          python3 -c "
+          from curl_cffi import requests
+          import sys
+          print('Triggering production deploy...')
+          r = requests.post('${{ secrets.DOKPLOY_PROD_HOOK }}', impersonate='chrome131', timeout=30)
+          print(f'HTTP status: {r.status_code}')
+          if r.status_code < 200 or r.status_code >= 300:
+              print(f'::error::Deploy failed with HTTP {r.status_code}')
+              sys.exit(1)
+          print(f'Deploy succeeded: HTTP {r.status_code}')
+          "
 
       - name: Trigger preproduction deployment
         if: github.ref_name == 'develop'
         run: |
-          echo "Triggering preproduction deploy..."
-          HTTP_CODE=$(curl -X POST \
-            -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
-            -s -o /dev/null -w "%{http_code}" \
-            --retry 3 \
-            "${{ secrets.DOKPLOY_PREPROD_HOOK }}")
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "::error::Deploy failed with HTTP $HTTP_CODE"
-            exit 1
-          fi
-          echo "Deploy succeeded: HTTP $HTTP_CODE"
+          python3 -c "
+          from curl_cffi import requests
+          import sys
+          print('Triggering preproduction deploy...')
+          r = requests.post('${{ secrets.DOKPLOY_PREPROD_HOOK }}', impersonate='chrome131', timeout=30)
+          print(f'HTTP status: {r.status_code}')
+          if r.status_code < 200 or r.status_code >= 300:
+              print(f'::error::Deploy failed with HTTP {r.status_code}')
+              sys.exit(1)
+          print(f'Deploy succeeded: HTTP {r.status_code}')
+          "
