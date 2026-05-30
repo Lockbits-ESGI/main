@@ -454,10 +454,14 @@ jobs:
           echo "Triggering production deploy..."
           HTTP_CODE=$(curl -X POST \
             -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
-            -f -s -o /dev/null -w "%{http_code}" \
+            -s -o /dev/null -w "%{http_code}" \
             --retry 3 \
             "${{ secrets.DOKPLOY_PROD_HOOK }}")
-          echo "HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::Deploy failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "Deploy succeeded: HTTP $HTTP_CODE"
 
       - name: Trigger preproduction deployment
         if: github.ref_name == 'develop'
@@ -465,7 +469,11 @@ jobs:
           echo "Triggering preproduction deploy..."
           HTTP_CODE=$(curl -X POST \
             -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
-            -f -s -o /dev/null -w "%{http_code}" \
+            -s -o /dev/null -w "%{http_code}" \
             --retry 3 \
             "${{ secrets.DOKPLOY_PREPROD_HOOK }}")
-          echo "HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::Deploy failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "Deploy succeeded: HTTP $HTTP_CODE"
