@@ -451,9 +451,21 @@ jobs:
       - name: Trigger production deployment
         if: github.ref_name == 'main'
         run: |
-          curl -X POST "${{ secrets.DOKPLOY_PROD_HOOK }}"
+          echo "Triggering production deploy..."
+          HTTP_CODE=$(curl -X POST \
+            -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
+            -f -s -o /dev/null -w "%{http_code}" \
+            --retry 3 \
+            "${{ secrets.DOKPLOY_PROD_HOOK }}")
+          echo "HTTP status: $HTTP_CODE"
 
       - name: Trigger preproduction deployment
         if: github.ref_name == 'develop'
         run: |
-          curl -X POST "${{ secrets.DOKPLOY_PREPROD_HOOK }}"
+          echo "Triggering preproduction deploy..."
+          HTTP_CODE=$(curl -X POST \
+            -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
+            -f -s -o /dev/null -w "%{http_code}" \
+            --retry 3 \
+            "${{ secrets.DOKPLOY_PREPROD_HOOK }}")
+          echo "HTTP status: $HTTP_CODE"
