@@ -73,7 +73,7 @@ Met a jour les references des sous-modules Git et declenche la CI.
 bash install.sh --update-sources
 ```
 
-Ce mode est different des autres : il s'execute depuis un clone local du depot Git (pas depuis un serveur distant). Il execute `git submodule update --remote --merge` sur chaque sous-module, verifie si des changements sont presents, cree un commit `"update submodules to latest"`, et propose de pousser sur `origin/main`.
+Ce mode est different des autres : il s'execute depuis un clone local du depot Git (pas depuis un serveur distant). Il execute `git submodule update --remote` sur chaque sous-module, verifie si des changements sont presents, cree un commit `"update submodules to latest"`, et propose de pousser sur `origin/main`.
 
 Apres le push, la pipeline CI rebuild automatiquement les images sur GHCR. Une fois les images rebuildees, le serveur peut etre mis a jour avec `--update`.
 
