@@ -60,7 +60,7 @@ Ce workflow automatise la mise a jour des references des sous-modules.
 ### Fonctionnement
 
 1. Le workflow clone le depot avec les sous-modules en mode recursif.
-2. Il execute `git submodule update --remote --merge` pour recuperer les derniers commits de chaque sous-module.
+2. Il execute `git submodule update --remote` pour recuperer les derniers commits de chaque sous-module.
 3. Il verifie si des changements sont presents via `git diff --quiet`.
 4. Si des changements sont detectes, il cree un commit automatique (`chore: auto-update submodules`) et le pousse sur `main`.
 
