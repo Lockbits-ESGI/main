@@ -42,6 +42,7 @@ Environment variables:
   SERVER_URL   URL of the LockBits EDR server (required)
   AUTH_TOKEN   Authentication token for the EDR server (required)
   AGENT_MODE   Agent operation mode: monitor (default) or scan
+  AGENT_COMPANY Company tag applied to the deployed agent, e.g. EntrepriseA
 
 Options:
   --mode MODE           Installation mode: binary (default) or docker
@@ -53,8 +54,8 @@ Options:
   --help                Show this help
 
 Examples:
-  SERVER_URL=https://edr.lockbits.io AUTH_TOKEN=xxx bash install-agent.sh
-  SERVER_URL=https://edr.lockbits.io AUTH_TOKEN=xxx bash install-agent.sh --mode docker --auto-install-docker
+  SERVER_URL=https://edr.lockbits.io AUTH_TOKEN=xxx AGENT_COMPANY=EntrepriseA bash install-agent.sh
+  SERVER_URL=https://edr.lockbits.io AUTH_TOKEN=xxx AGENT_COMPANY=EntrepriseA bash install-agent.sh --mode docker --auto-install-docker
   bash install-agent.sh --update
   bash install-agent.sh --uninstall
 EOF
@@ -146,7 +147,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=${INSTALL_DIR}/${BINARY_NAME} --mode ${agent_mode}
+ExecStart=${INSTALL_DIR}/${BINARY_NAME} --config ${CONFIG_DIR}/config.yaml --mode ${agent_mode}
 Restart=always
 RestartSec=10
 EnvironmentFile=${CONFIG_DIR}/config.env
@@ -186,9 +187,7 @@ ExecStart=/usr/bin/docker run \\
     -v ${DATA_DIR}/data:/app/data \\
     -v ${DATA_DIR}/queue:/app/queue \\
     -v ${DATA_DIR}/logs:/app/logs \\
-    -e MINIEDR_SERVER_URL=${server_url} \\
-    -e MINIEDR_AUTH_TOKEN=${auth_token} \\
-    -e MINIEDR_MODE=${agent_mode} \\
+    --env-file ${CONFIG_DIR}/config.env \\
     ${GHCR_IMAGE}:${RELEASE_VERSION}
 ExecStop=/usr/bin/docker stop ${DOCKER_CONTAINER_NAME}
 Restart=always
@@ -212,6 +211,11 @@ write_config_env() {
 SERVER_URL=${server_url}
 AUTH_TOKEN=${auth_token}
 AGENT_MODE=${AGENT_MODE:-monitor}
+AGENT_COMPANY=${AGENT_COMPANY:-}
+MINIEDR_SERVER_URL=${server_url}
+MINIEDR_AUTH_TOKEN=${auth_token}
+MINIEDR_MODE=${AGENT_MODE:-monitor}
+MINIEDR_AGENT_COMPANY=${AGENT_COMPANY:-}
 ENV
     chmod 600 "$CONFIG_DIR/config.env"
 }
@@ -225,6 +229,7 @@ write_config_yaml() {
 agent:
   id_file: "${DATA_DIR}/data/agent_id"
   version: "${RELEASE_VERSION}"
+  company: "${AGENT_COMPANY:-}"
   heartbeat_interval: 300
   snapshot_interval: 600
   generate_local_report: false
