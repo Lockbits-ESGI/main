@@ -437,3 +437,35 @@ jobs:
           severity: CRITICAL,HIGH
           vuln-type: os,library
           hide-progress: false
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # STAGE 4 — Deploy to Dokploy (after images pushed to GHCR)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  deploy:
+    name: "🚀 Dokploy · Déploiement"
+    runs-on: ubuntu-latest
+    needs: [build-edr, build-site]
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Trigger production deployment
+        if: github.ref_name == 'main'
+        run: |
+          echo "Triggering production deploy..."
+          HTTP_CODE=$(curl -X POST \
+            -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
+            -f -s -o /dev/null -w "%{http_code}" \
+            --retry 3 \
+            "${{ secrets.DOKPLOY_PROD_HOOK }}")
+          echo "HTTP status: $HTTP_CODE"
+
+      - name: Trigger preproduction deployment
+        if: github.ref_name == 'develop'
+        run: |
+          echo "Triggering preproduction deploy..."
+          HTTP_CODE=$(curl -X POST \
+            -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
+            -f -s -o /dev/null -w "%{http_code}" \
+            --retry 3 \
+            "${{ secrets.DOKPLOY_PREPROD_HOOK }}")
+          echo "HTTP status: $HTTP_CODE"
