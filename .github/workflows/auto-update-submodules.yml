@@ -1,8 +1,9 @@
 name: Auto-update submodules
 
 on:
+  repository_dispatch:
+    types: [submodule-updated]
   schedule:
-    # Une fois par jour à 6h UTC — les submodules n'avancent pas si vite
     - cron: "0 6 * * *"
   workflow_dispatch:
 
