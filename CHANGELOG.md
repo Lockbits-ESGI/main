@@ -1,14 +1,30 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Toutes les modifications notables du projet LockBits.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+> Format basé sur [Keep a Changelog](https://keepachangelog.com/),
+> et [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.0] — 2025-02-xx
 
-### Fixed
-- Update EDR submodule to 7af6784 — SystemSnapshot fields validation, FIM runtime ignores, company inference improvements, GLPI company requester improvements (#97)
+### Ajouté
 
-### Changed
-- Wire GLPI ticket creation through EDR server — pass GLPI_* env vars to edr-server in compose files, update .env.example with ticket configuration options (superseded by #97, PR #72 closed)
+- **Repository d'orchestration** avec git submodules pour `edr` et `site_lockbits`
+- **Docker Compose multi-environnement** : dev, prod, preprod
+- **CI/CD GitHub Actions** : lint → test → build & push → Trivy scan
+- **EDR Server (FastAPI)** : scan de fichiers avec intégration VirusTotal, rapports STIX
+- **Agent EDR** : binaire portable + image Docker (linux/amd64 + arm64)
+- **Site client PHP 8+/Apache** : portail client avec authentification GLPI SSO
+- **Script d'installation one-liner** (`install.sh`) avec mode update et cron
+- **Monitoring** : Prometheus, Grafana, Loki, Alloy
+- **Dependabot** : dépendances pip, Docker, GitHub Actions
+- **Pre-commit hooks** : ruff lint/format, validation basique
+
+### Sécurité
+
+- Authentification par token pour l'API EDR
+- Healthchecks Docker pour tous les services
+- Images multi-arch (amd64 + arm64)
+- Scan Trivy en CI (CRITICAL + HIGH)
+
+[1.0.0]: https://github.com/Lockbits-ESGI/main/releases/tag/v1.0.0

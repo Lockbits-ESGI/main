@@ -17,8 +17,9 @@ set -euo pipefail
 # ─────────────────────────────────────────────────────────────
 
 # ── Config ───────────────────────────────────────────────────
+# Release assets: https://github.com/Lockbits-ESGI/main/releases/latest/download/lockbits-agent-linux-{amd64,arm64}
 readonly REPO_OWNER="Lockbits-ESGI"
-readonly REPO_NAME="edr"
+readonly REPO_NAME="main"
 readonly GHCR_IMAGE="ghcr.io/lockbits-esgi/edr-agent"
 readonly BINARY_NAME="lockbits-agent"
 readonly INSTALL_DIR="/usr/local/bin"
