@@ -181,6 +181,26 @@ jobs:
         if: always()
         run: docker rm -f site-smoke ci-mysql || true
 
+  test-site-phpunit:
+    name: PHPUnit (Site)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site_lockbits
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit
+
 # ─────────────────────────────────────────────────────────────────────────────
 # STAGE 2 — Build & Push  (push to main only)
 # ─────────────────────────────────────────────────────────────────────────────
