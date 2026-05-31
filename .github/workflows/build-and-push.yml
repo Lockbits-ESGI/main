@@ -508,21 +508,57 @@ jobs:
       - name: Trigger production deployment
         if: github.ref_name == 'main'
         run: |
+          echo "=== PRODUCTION DEPLOY ==="
           echo "Triggering production deploy..."
-          HTTP_CODE=$(curl -X POST \
+          curl -X POST -s -o /tmp/dokploy_response.txt -w "%{http_code}" \
+            -v \
             -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
-            -f -s -o /dev/null -w "%{http_code}" \
-            --retry 3 \
-            "${{ secrets.DOKPLOY_PROD_HOOK }}")
-          echo "HTTP status: $HTTP_CODE"
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -d '{"ref":"refs/heads/main","repository":{"full_name":"Lockbits-ESGI/main"}}' \
+            "${{ secrets.DOKPLOY_PROD_HOOK }}" \
+            2>/tmp/dokploy_verbose.txt >/tmp/dokploy_code.txt || true
+          HTTP_CODE=$(cat /tmp/dokploy_code.txt)
+          echo "HTTP_CODE=$HTTP_CODE"
+          echo ""
+          echo "--- Dokploy response body ---"
+          cat /tmp/dokploy_response.txt 2>/dev/null || echo "(empty)"
+          echo ""
+          echo "--- curl verbose (stderr) ---"
+          cat /tmp/dokploy_verbose.txt 2>/dev/null
+          echo ""
+          echo "---"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::Deploy failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "Deploy succeeded: HTTP $HTTP_CODE"
 
       - name: Trigger preproduction deployment
         if: github.ref_name == 'develop'
         run: |
+          echo "=== PREPRODUCTION DEPLOY ==="
           echo "Triggering preproduction deploy..."
-          HTTP_CODE=$(curl -X POST \
+          curl -X POST -s -o /tmp/dokploy_response.txt -w "%{http_code}" \
+            -v \
             -A "Mozilla/5.0 (compatible; GitHub-Actions)" \
-            -f -s -o /dev/null -w "%{http_code}" \
-            --retry 3 \
-            "${{ secrets.DOKPLOY_PREPROD_HOOK }}")
-          echo "HTTP status: $HTTP_CODE"
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -d '{"ref":"refs/heads/develop","repository":{"full_name":"Lockbits-ESGI/main"}}' \
+            "${{ secrets.DOKPLOY_PREPROD_HOOK }}" \
+            2>/tmp/dokploy_verbose.txt >/tmp/dokploy_code.txt || true
+          HTTP_CODE=$(cat /tmp/dokploy_code.txt)
+          echo "HTTP_CODE=$HTTP_CODE"
+          echo ""
+          echo "--- Dokploy response body ---"
+          cat /tmp/dokploy_response.txt 2>/dev/null || echo "(empty)"
+          echo ""
+          echo "--- curl verbose (stderr) ---"
+          cat /tmp/dokploy_verbose.txt 2>/dev/null
+          echo ""
+          echo "---"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::Deploy failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "Deploy succeeded: HTTP $HTTP_CODE"
