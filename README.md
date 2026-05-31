@@ -436,3 +436,54 @@ git push
 ```
 
 Après le push (auto ou manuel), la CI rebuild les images sur ghcr.io. Le serveur de prod les récupère automatiquement via le cron `--cron` (toutes les 5min) ou manuellement avec `--update`.
+
+## Installation de l'agent EDR
+
+Installez l'agent de sécurité LockBits sur vos machines Linux pour une protection en temps réel.
+
+### Prérequis
+
+- Linux x86_64 (amd64) ou ARM64 (aarch64)
+- Accès réseau au serveur EDR (variable SERVER_URL)
+
+### Installation (mode binaire — recommandé)
+
+```
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
+  SERVER_URL=https://votre-edr.example.com AUTH_TOKEN=votre-token bash
+```
+
+Remplacez https://votre-edr.example.com par l'URL de votre serveur EDR et votre-token par le token d'authentification de votre client.
+
+> 💡 La commande exacte est disponible sur votre dashboard client LockBits, dans la section **🔒 EDR Agents**.
+
+### Installation (mode Docker)
+
+```
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
+  SERVER_URL=https://votre-edr.example.com AUTH_TOKEN=votre-token bash -s -- --mode docker
+```
+
+Le mode Docker nécessite que Docker soit installé sur la machine cible.
+
+### Mise à jour de l'agent
+
+```
+# Mode binaire
+sudo /opt/lockbits-agent/lockbits-agent --update
+
+# Mode Docker
+docker pull ghcr.io/lockbits-esgi/edr/lockbits-agent:latest
+```
+
+### Désinstallation
+
+```
+# Mode binaire
+sudo /opt/lockbits-agent/lockbits-agent --uninstall
+
+# Mode Docker
+docker stop lockbits-agent && docker rm lockbits-agent
+```
+
+> Les binaires sont distribués via les GitHub Releases et mis à jour à chaque push sur main.
