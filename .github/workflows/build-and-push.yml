@@ -300,7 +300,7 @@ jobs:
           # Create release if it doesn't exist (no-op if it does)
           gh release create latest --title "Latest build" --notes "Automatic build from main branch" || true
           # Upload/overwrite assets
-          gh release upload latest ./release-assets/* --clobber
+          gh release upload latest ./release-assets/lockbits-agent-linux-* --clobber
 
   build-edr-agent-docker:
     name: "Agent · Docker Build & Push"
