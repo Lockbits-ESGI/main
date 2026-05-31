@@ -73,6 +73,8 @@ services:
       GLPI_COMPANY_REQUESTER_TYPE: ${GLPI_COMPANY_REQUESTER_TYPE:-Group}
       GLPI_ENTITY_RECURSIVE: ${GLPI_ENTITY_RECURSIVE:-true}
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
+      EDR_SERVER_URL: "${EDR_SERVER_URL}"
+      EDR_AUTH_TOKEN: "${EDR_AUTH_TOKEN}"
     depends_on:
       site-db:
         condition: service_healthy
