@@ -1,0 +1,40 @@
+=== EDGE CASES ===
+
+EC1: DB failure (no PDO connection available)
+  - Test: Run metrics.php without database (catch PDOException)
+  - Result: db_health=0 (graceful degradation), no PHP Fatal/Warning errors ✅
+  - All other metrics return 0 instead of crashing ✅
+  - VERDICT: ✅ PASS
+
+EC2: Missing .lockbits_start file
+  - Test: Run without the Docker build-time marker file
+  - Result: Fallback chain works:
+    1. file_get_contents('.lockbits_start') → false → next fallback
+    2. $_SERVER['REQUEST_TIME'] → used if set
+    3. time() → ultimate fallback
+  - Confirmed: No crash, uptime calculates from available time source ✅
+  - VERDICT: ✅ PASS
+
+EC3: Missing metrics_counter.txt (fresh start / volume reset)
+  - Test: Run metrics.php without existing counter file
+  - Result: fopen('c+') creates the file automatically ✅
+  - Counter starts at 1 (first request increments from 0) ✅
+  - File I/O uses LOCK_EX for atomic increments ✅
+  - VERDICT: ✅ PASS
+
+EC4: .htaccess rewrite safety
+  - Test: Verify RewriteRule ^metrics$ - [L] exists
+  - Result: Rule stops rewrite processing for /metrics URL ✅
+  - No RewriteCond targets /metrics → never caught by clean URL rules ✅
+  - VERDICT: ✅ PASS
+
+EC5: Full Prometheus format compliance
+  - Test: Verify output structure
+  - Result:
+    - 6 HELP lines (one per metric) ✅
+    - 6 TYPE lines (one per metric) ✅
+    - 8 metric value lines (1 db + 1 users + 3 tickets + 1 mem + 1 uptime + 1 http) ✅
+    - Content-Type: text/plain; version=0.0.4 ✅
+  - VERDICT: ✅ PASS
+
+TOTAL: 5/5 EDGE CASES PASS ✅

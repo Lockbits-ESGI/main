@@ -1,0 +1,5 @@
+  - job_name: "lockbits_site"
+    metrics_path: "/metrics"
+    static_configs:
+      # On cible le container name et non le service name "site-web" pour éviter
+      # le round-robin DNS de Dokploy entre prod et preprod.

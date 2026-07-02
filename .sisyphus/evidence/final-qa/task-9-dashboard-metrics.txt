@@ -1,0 +1,13 @@
+Task: T9 — Dashboard metric names verification
+Command: grep -o 'lockbits_[a-z_]*' docker/grafana/provisioning/dashboards/site-dashboard.json | sort -u
+
+Result:
+lockbits_db_health
+lockbits_http_requests_total
+lockbits_php_memory_bytes
+lockbits_php_uptime_seconds
+lockbits_tickets_total
+lockbits_users_total
+
+✅ All 6 metrics from metrics.php are referenced in the dashboard.
+VERDICT: ✅ PASS

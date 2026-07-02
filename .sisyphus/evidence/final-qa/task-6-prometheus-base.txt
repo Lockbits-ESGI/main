@@ -1,0 +1,11 @@
+Task: T6 — Prometheus base config lockbits_site job
+Command: grep -A4 "lockbits_site" docker/prometheus/prometheus.yml
+
+Result:
+  - job_name: "lockbits_site"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["site-web:80"]
+
+✅ Target: site-web:80 (service name for base config)
+VERDICT: ✅ PASS

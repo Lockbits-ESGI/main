@@ -1,0 +1,8 @@
+        "lockbits_db_health",
+        "lockbits_users_total",
+        'lockbits_tickets_total{status="open"}',
+        'lockbits_tickets_total{status="in_progress"}',
+        'lockbits_tickets_total{status="closed"}',
+        "lockbits_php_memory_bytes",
+        "lockbits_http_requests_total",
+    for name in ("lockbits_db_health", "lockbits_users_total"):

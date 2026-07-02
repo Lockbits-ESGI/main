@@ -1,0 +1,10 @@
+Task: T2 — Dockerfile structural validity
+Commands:
+  grep -c 'FROM' site_lockbits/Dockerfile    → 1
+  grep -c 'COPY' site_lockbits/Dockerfile    → 1
+  grep -c 'CMD' site_lockbits/Dockerfile     → 2 (HEALTHCHECK CMD + CMD)
+  grep -c 'RUN' site_lockbits/Dockerfile     → 4
+
+✅ All essential directives present.
+✅ File structure intact.
+VERDICT: ✅ PASS

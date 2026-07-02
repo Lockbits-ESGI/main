@@ -1,0 +1,5 @@
+  - job_name: "lockbits_site"
+    metrics_path: "/metrics"
+    static_configs:
+      # Container name pour éviter round-robin Dokploy
+      - targets: ["lockbits_web_preprod:80"]

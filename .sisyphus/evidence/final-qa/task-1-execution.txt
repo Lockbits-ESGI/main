@@ -1,0 +1,36 @@
+Task: T1 — PHP execution (metrics output)
+Command: php -r "require metrics.php" with $_SERVER['REQUEST_TIME']
+Execution: docker run --rm -v $(pwd)/site_lockbits:/app php:8.2-cli php -r '...'
+
+Output:
+# HELP lockbits_db_health Database health status (1=healthy, 0=down)
+# TYPE lockbits_db_health gauge
+lockbits_db_health 0
+# HELP lockbits_users_total Total number of registered users
+# TYPE lockbits_users_total gauge
+lockbits_users_total 0
+# HELP lockbits_tickets_total Number of tickets grouped by status
+# TYPE lockbits_tickets_total gauge
+lockbits_tickets_total{status="open"} 0
+lockbits_tickets_total{status="in_progress"} 0
+lockbits_tickets_total{status="closed"} 0
+# HELP lockbits_php_memory_bytes Current PHP memory usage in bytes
+# TYPE lockbits_php_memory_bytes gauge
+lockbits_php_memory_bytes 2097152
+# HELP lockbits_php_uptime_seconds PHP uptime in seconds since container start
+# TYPE lockbits_php_uptime_seconds gauge
+lockbits_php_uptime_seconds 0
+# HELP lockbits_http_requests_total Total number of HTTP requests served
+# TYPE lockbits_http_requests_total counter
+lockbits_http_requests_total 2
+
+Metrics detected (6/6):
+✅ lockbits_db_health
+✅ lockbits_users_total
+✅ lockbits_tickets_total{status="open/in_progress/closed"}
+✅ lockbits_php_memory_bytes
+✅ lockbits_php_uptime_seconds
+✅ lockbits_http_requests_total
+
+No PHP fatal errors. Graceful DB failure (db_health=0 without crash).
+VERDICT: ✅ PASS

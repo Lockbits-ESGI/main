@@ -143,6 +143,7 @@ services:
       EDR_AUTH_TOKEN: "${EDR_AUTH_TOKEN}"
     networks:
       - frontend
+      - monitoring
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]

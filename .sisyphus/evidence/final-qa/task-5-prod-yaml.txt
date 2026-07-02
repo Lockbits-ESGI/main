@@ -1,0 +1,5 @@
+Task: T5 — Prod YAML validation
+Command: python3 -c "import yaml; yaml.safe_load(open('docker-compose.prod.yml')); print('VALID')"
+
+Result: VALID
+VERDICT: ✅ PASS

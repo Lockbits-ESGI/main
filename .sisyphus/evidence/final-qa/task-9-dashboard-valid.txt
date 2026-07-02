@@ -1,0 +1,22 @@
+Task: T9 — Dashboard JSON structure validation
+Command: python3 -c "
+import json
+with open('docker/grafana/provisioning/dashboards/site-dashboard.json') as f:
+    d = json.load(f)
+assert d['uid'] == 'lockbits-site'
+assert d['title'] == 'LockBits Site'
+assert len(d['panels']) >= 5
+assert '__inputs' in d
+assert d['templating']['list'][0]['type'] == 'datasource'
+print(f'VALID: uid={d[\"uid\"]}, title={d[\"title\"]}, panels={len(d[\"panels\"])}')
+"
+
+Result: VALID: uid=lockbits-site, title=LockBits Site, panels=8
+
+Checked:
+✅ uid = lockbits-site
+✅ title = LockBits Site
+✅ panels = 8 (≥5)
+✅ __inputs present
+✅ Datasource template present
+VERDICT: ✅ PASS

@@ -1,0 +1,9 @@
+Task: T3 — Existing .htaccess rules intact
+Command: grep "client" site_lockbits/.htaccess | grep "Rewrite"
+
+Result:
+RewriteCond %{THE_REQUEST} \s/(client/[a-zA-Z_-]+)\.php[?\s] [NC]
+RewriteRule ^client/([a-zA-Z_-]+)$ client/$1.php [L]
+
+✅ 2 existing Rewrite rules for /client/ are intact.
+VERDICT: ✅ PASS

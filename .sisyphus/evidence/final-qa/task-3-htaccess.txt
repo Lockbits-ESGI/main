@@ -1,0 +1,8 @@
+Task: T3 — .htaccess RewriteRule exclusion for /metrics
+Command: grep "RewriteRule ^metrics" site_lockbits/.htaccess
+
+Result:
+RewriteRule ^metrics$ - [L]
+
+✅ Rule exists after RewriteEngine On, before SetEnvIf.
+VERDICT: ✅ PASS
