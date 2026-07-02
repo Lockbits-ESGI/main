@@ -125,6 +125,7 @@ services:
       DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-}
       APP_NAME: ${APP_NAME:-LockBits Client Area}
       APP_ENV: ${APP_ENV:-production}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-} 
       GLPI_API_URL: ${GLPI_API_URL:-}
       GLPI_WEB_URL: ${GLPI_WEB_URL:-}
       GLPI_APP_TOKEN: ${GLPI_APP_TOKEN:-}
@@ -138,6 +139,8 @@ services:
       GLPI_COMPANY_REQUESTER_TYPE: ${GLPI_COMPANY_REQUESTER_TYPE:-Group}
       GLPI_ENTITY_RECURSIVE: ${GLPI_ENTITY_RECURSIVE:-true}
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
+      EDR_SERVER_URL: "${EDR_SERVER_URL}"
+      EDR_AUTH_TOKEN: "${EDR_AUTH_TOKEN}"
     networks:
       - frontend
       - monitoring

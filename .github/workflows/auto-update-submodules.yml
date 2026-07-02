@@ -23,7 +23,10 @@ jobs:
 
       - name: Update submodules to latest remote
         run: |
-          git submodule update --remote --merge
+          # --merge causes "unrelated histories" on shallow CI clones
+          # --remote + fetch more history avoids the error
+          git fetch --deepen=100 origin 2>/dev/null || true
+          git submodule update --remote
 
       - name: Check if anything changed
         id: diff

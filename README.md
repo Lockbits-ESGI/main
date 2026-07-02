@@ -1,14 +1,45 @@
 # LockBits — Repo Principal
 
-Repo d'orchestration qui regroupe tous les composants LockBits via git submodules et publie les images Docker sur [ghcr.io](https://ghcr.io/lockbits-esgi).
+<p align="center">
+  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/github/actions/workflow/status/Lockbits-ESGI/main/build-and-push.yml?branch=main&label=CI&logo=github" alt="CI">
+  <img src="https://img.shields.io/github/license/Lockbits-ESGI/main" alt="License">
+</p>
+
+EDR (Endpoint Detection & Response) open-source avec portail client.  
+Repo d'orchestration qui regroupe tous les composants via git submodules et publie les images Docker sur [ghcr.io](https://ghcr.io/lockbits-esgi).
+
+## Architecture
+
+```mermaid
+graph TD
+    A[Agent EDR] -->|API REST| B[EDR Server<br/>FastAPI :8001]
+    B --> C[(SQLite)]
+    B -->|Scan| D[VirusTotal]
+    E[Portail Client<br/>PHP/Apache :8080] -->|SSO| F[GLPI]
+    E --> G[(MySQL :3307)]
+
+    subgraph "Docker Compose Stack"
+        B
+        C
+        E
+        G
+    end
+
+    subgraph "Monitoring"
+        H[Prometheus] --> I[Grafana]
+        J[Loki]
+    end
+```
 
 ## Composants
 
-| Service | Image GHCR | Port |
-|---------|-----------|------|
-| EDR Server (FastAPI) | `ghcr.io/lockbits-esgi/edr:latest` | 8001 |
-| Site LockBits (PHP/Apache) | `ghcr.io/lockbits-esgi/site_lockbits:latest` | 8080 |
-| MySQL | `mysql:8.0` | 3307 |
+| Service | Description | Image GHCR | Port |
+|---------|-------------|-----------|------|
+| **EDR Server** | API REST FastAPI — scan, rapports STIX, VT | `ghcr.io/lockbits-esgi/edr:latest` | 8001 |
+| **EDR Agent** | Binaire C/Binaire portable + image Docker | `ghcr.io/lockbits-esgi/edr-agent:latest` | — |
+| **Site LockBits** | Portail client PHP 8+/Apache, auth GLPI SSO | `ghcr.io/lockbits-esgi/site_lockbits:latest` | 8080 |
+| **MySQL** | Base de données du portail client | `mysql:8.0` | 3307 |
 
 ---
 
@@ -398,10 +429,61 @@ bash install.sh --update-sources
 Ou :
 
 ```bash
-git submodule update --remote --merge
+git submodule update --remote
 git add -u
 git commit -m "update submodules"
-git push origin main
+git push
 ```
 
 Après le push (auto ou manuel), la CI rebuild les images sur ghcr.io. Le serveur de prod les récupère automatiquement via le cron `--cron` (toutes les 5min) ou manuellement avec `--update`.
+
+## Installation de l'agent EDR
+
+Installez l'agent de sécurité LockBits sur vos machines Linux pour une protection en temps réel.
+
+### Prérequis
+
+- Linux x86_64 (amd64) ou ARM64 (aarch64)
+- Accès réseau au serveur EDR (variable SERVER_URL)
+
+### Installation (mode binaire — recommandé)
+
+```
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
+  SERVER_URL=https://votre-edr.example.com AUTH_TOKEN=votre-token bash
+```
+
+Remplacez https://votre-edr.example.com par l'URL de votre serveur EDR et votre-token par le token d'authentification de votre client.
+
+> 💡 La commande exacte est disponible sur votre dashboard client LockBits, dans la section **🔒 EDR Agents**.
+
+### Installation (mode Docker)
+
+```
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
+  SERVER_URL=https://votre-edr.example.com AUTH_TOKEN=votre-token bash -s -- --mode docker
+```
+
+Le mode Docker nécessite que Docker soit installé sur la machine cible.
+
+### Mise à jour de l'agent
+
+```
+# Mode binaire
+sudo /opt/lockbits-agent/lockbits-agent --update
+
+# Mode Docker
+docker pull ghcr.io/lockbits-esgi/edr/lockbits-agent:latest
+```
+
+### Désinstallation
+
+```
+# Mode binaire
+sudo /opt/lockbits-agent/lockbits-agent --uninstall
+
+# Mode Docker
+docker stop lockbits-agent && docker rm lockbits-agent
+```
+
+> Les binaires sont distribués via les GitHub Releases et mis à jour à chaque push sur main.
