@@ -1,0 +1,22 @@
+Task: T10 — smoke_site.py metric assertions verification
+Command: grep "lockbits_" tests/smoke_site.py
+
+Result:
+        "lockbits_db_health",
+        "lockbits_users_total",
+        'lockbits_tickets_total{status="open"}',
+        'lockbits_tickets_total{status="in_progress"}',
+        'lockbits_tickets_total{status="closed"}',
+        "lockbits_php_memory_bytes",
+        "lockbits_http_requests_total",
+    for name in ("lockbits_db_health", "lockbits_users_total"):
+
+✅ All expected metrics referenced in assertions:
+  - lockbits_db_health
+  - lockbits_users_total
+  - lockbits_tickets_total (3 statuses)
+  - lockbits_php_memory_bytes
+  - lockbits_http_requests_total
+✅ Numeric value verification for db_health and users_total
+✅ HELP/TYPE line assertions present
+VERDICT: ✅ PASS

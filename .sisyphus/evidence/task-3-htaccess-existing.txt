@@ -1,0 +1,6 @@
+2
+client Rewrite rules found:
+# Redirige /client/xxx.php -> /client/xxx (301, préserve query string)
+RewriteCond %{THE_REQUEST} \s/(client/[a-zA-Z_-]+)\.php[?\s] [NC]
+# Réécriture interne : /client/xxx -> /client/xxx.php
+RewriteRule ^client/([a-zA-Z_-]+)$ client/$1.php [L]

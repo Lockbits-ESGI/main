@@ -1,0 +1,5 @@
+Task: T7 — Prometheus preprod YAML validation
+Command: python3 -c "import yaml; yaml.safe_load(open('docker/prometheus/prometheus.preprod.yml')); print('VALID')"
+
+Result: VALID
+VERDICT: ✅ PASS

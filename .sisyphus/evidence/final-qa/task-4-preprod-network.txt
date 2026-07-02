@@ -1,0 +1,10 @@
+Task: T4 — Preprod monitoring network for site-web
+Command: sed -n '/^  site-web:/,/^  [a-z]/p' docker-compose.preprod.yml | grep -A10 "networks:"
+
+Result:
+    networks:
+      - frontend
+      - monitoring
+
+✅ "- frontend" followed by "- monitoring"
+VERDICT: ✅ PASS

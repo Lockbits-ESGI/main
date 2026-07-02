@@ -1,0 +1,12 @@
+Task: T7 — Prometheus preprod config lockbits_site job
+Command: grep -A5 "lockbits_site" docker/prometheus/prometheus.preprod.yml
+
+Result:
+  - job_name: "lockbits_site"
+    metrics_path: "/metrics"
+    static_configs:
+      # Container name pour éviter round-robin Dokploy
+      - targets: ["lockbits_web_preprod:80"]
+
+✅ Target: lockbits_web_preprod:80 (container name for preprod)
+VERDICT: ✅ PASS

@@ -1,0 +1,6 @@
+lockbits_db_health
+lockbits_http_requests_total
+lockbits_php_memory_bytes
+lockbits_php_uptime_seconds
+lockbits_tickets_total
+lockbits_users_total

@@ -140,6 +140,7 @@ services:
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
     networks:
       - frontend
+      - monitoring
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]

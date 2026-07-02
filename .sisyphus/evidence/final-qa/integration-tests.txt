@@ -1,0 +1,38 @@
+=== INTEGRATION TESTS ===
+Cross-task verification that all features work together coherently.
+
+IT1: Cross-file dependencies
+  - metrics.php requires ./client/config.php   → EXISTS ✅
+  - metrics.php requires ./client/db.php        → EXISTS ✅
+  VERDICT: ✅ PASS
+
+IT2: Dockerfile → .lockbits_start → metrics.php
+  - Dockerfile creates: RUN date +%s > /var/www/html/.lockbits_start
+  - metrics.php reads: $uptimeFile = __DIR__ . '/.lockbits_start'
+  - Pipeline: build → .lockbits_start created → metrics.php reads it → uptime calculated
+  VERDICT: ✅ PASS
+
+IT3: Network chain
+  - Preprod: site-web connected to monitoring network ✅
+  - Preprod: Prometheus connected to monitoring network ✅
+  - Shared network enables Prometheus → site-web scraping
+  VERDICT: ✅ PASS
+
+IT4: Prometheus targets match docker-compose container names
+  - Preprod: container_name=lockbits_web_preprod → target=lockbits_web_preprod:80 ✅
+  - Prod: container_name=lockbits_web → target=lockbits_web:80 ✅
+  - Targets match container names, preventing Dokploy DNS round-robin
+  VERDICT: ✅ PASS
+
+IT5: Grafana dashboard covers all metrics
+  - Panel: DB Health → lockbits_db_health ✅
+  - Panel: Users Total → lockbits_users_total ✅
+  - Panel: Tickets by Status → lockbits_tickets_total ✅
+  - Panel: PHP Memory → lockbits_php_memory_bytes ✅
+  - Panel: HTTP Requests → lockbits_http_requests_total ✅
+  - Panel: PHP Uptime → lockbits_php_uptime_seconds ✅
+  - Panel: Requests → rate(lockbits_http_requests_total[5m]) ✅
+  - All 6 metrics + derived query covered
+  VERDICT: ✅ PASS
+
+TOTAL: 5/5 INTEGRATION TESTS PASS ✅

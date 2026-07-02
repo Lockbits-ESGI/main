@@ -1,0 +1,4 @@
+  - job_name: "lockbits_site"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["site-web:80"]
