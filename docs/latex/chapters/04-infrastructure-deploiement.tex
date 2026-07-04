@@ -333,6 +333,66 @@ configurée dans les \texttt{secrets} GitHub. Les tokens Dokploy sont stockés
 dans les \textbf{secrets GitHub} (\texttt{DOKPLOY\_PROD\_HOOK} et
 \texttt{DOKPLOY\_PREPROD\_HOOK}) et ne sont jamais exposés dans le code source.
 
+\subsection{Domaines et URLs publiques}
+
+L'ensemble des services est déployé publiquement sur le domaine
+\texttt{lockbits.pro}. Chaque composant possède son propre sous-domaine~:
+
+\begin{itemize}
+  \item \url{https://lockbits.pro} -- Site client (portail web)
+  \item \url{https://edr.lockbits.pro} -- Serveur EDR (API REST)
+  \item \url{https://preprod-edr.lockbits.pro} -- Serveur EDR (préproduction, branche \texttt{dev})
+  \item \url{https://chat.lockbits.pro} -- Chatbot client
+\end{itemize}
+
+Tous les dépôts sont publics sur \url{https://github.com/Lockbits-ESGI}.
+
+\subsection{Cloudflare Zero Trust}
+
+Tous les services déployés sont protégés et exposés via \textbf{Cloudflare Zero
+Trust}. L'infrastructure s'appuie sur un tunnel \texttt{cloudflared} exécuté
+dans un conteneur LXC dédié, qui agit comme point d'entrée unique pour le
+trafic externe.
+
+\subsubsection{Architecture du tunnel}
+
+Le tunnel \texttt{cloudflared} établit une connexion sortante depuis
+l'infrastructure vers le réseau Cloudflare. Aucun port n'est ouvert
+directement sur l'hébergement~; tout le trafic transite par le tunnel :
+
+\begin{itemize}
+  \item Le LXC \texttt{cloudflared} héberge le démon \texttt{cloudflared}
+    configuré avec un tunnel permanent ;
+  \item Cloudflare agit comme proxy inverse et terminatrice SSL/TLS ;
+  \item Les requêtes sont routées vers les services internes selon les
+    règles définies dans le tableau de bord Cloudflare ;
+  \item Seul le trafic authentifié et filtré par Cloudflare atteint les
+    services.
+\end{itemize}
+
+\subsubsection{Avantages}
+
+\begin{itemize}
+  \item \textbf{HTTPS automatique}~: Cloudflare fournit et renouvelle
+    automatiquement les certificats SSL/TLS pour tous les sous-domaines ;
+  \item \textbf{Protection DDoS}~: le réseau Cloudflare absorbe et filtre
+    les attaques avant qu'elles n'atteignent l'infrastructure ;
+  \item \textbf{AuthZero}~: possibilité d'activer l'authentification
+    Zero Trust (email, OTP, SSO) pour restreindre l'accès à certains
+    services (ex~: Grafana, monitoring) ;
+  \item \textbf{Cache et performance}~: Cloudflare met en cache les
+    ressources statiques et accélère la livraison du contenu ;
+  \item \textbf{IP source masquée}~: l'adresse IP réelle de
+    l'infrastructure n'est jamais exposée publiquement.
+\end{itemize}
+
+\subsubsection{Domaines couverts}
+
+Les certificats SSL/TLS couvrent l'ensemble des sous-domaines
+\texttt{lockbits.pro}~:
+\texttt{lockbits.pro}, \texttt{edr.lockbits.pro},
+\texttt{preprod-edr.lockbits.pro}, \texttt{chat.lockbits.pro}.
+
 \section{Scripts d'installation et maintenance}
 
 \subsection{install.sh}
@@ -387,7 +447,7 @@ EDR sur les machines des clients. Il peut fonctionner selon deux modes~:
 
 \begin{lstlisting}[language=dockerbash, caption={Installation de l'agent EDR (mode binaire)}, label={lst:install-agent}]
 curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \\
-  SERVER_URL=https://edr.example.com AUTH_TOKEN=token bash
+  SERVER_URL=https://edr.lockbits.pro AUTH_TOKEN=token bash
 \end{lstlisting}
 
 L'agent supporte les architectures \texttt{amd64} et \texttt{arm64}. La
