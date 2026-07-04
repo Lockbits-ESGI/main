@@ -1,0 +1,50 @@
+
+## Fichiers créés
+- `docs/latex/chapters/01-introduction.tex` (créé le 2026-07-04)
+  - 6 sections, 11 sous-sections — Introduction complète
+  - Contenu : Contexte, Objectifs, Périmètre/Contraintes, Méthodologie, Organisation du document
+  - Utilise `~:` pour les deux-points en français (espace insécable avant `:` en typographie française)
+  - Utilise `\textbf{}` pour les termes clés (EDR, LockBits, DevOps, etc.)
+  - Utilise `\texttt{}` pour les noms techniques (install.sh, linux/amd64, etc.)
+  - Évite les listes seules — chaque section inclut un texte introductif substantiel
+- Environ 3-4 pages estimées en sortie PDF
+- `docs/latex/chapters/04-infrastructure-deploiement.tex` (créé le 2026-07-04)
+  - 5 sections, 10 sous-sections — Infrastructure et Déploiement
+  - Contenu : Docker (stratégie, compose, images, réseau), CI/CD (pipeline, submodules, Dokploy), Scripts (install.sh, install-agent.sh, backup/restore), Monitoring (Prometheus, Grafana, Loki, Alloy), Sécurité (Trivy, secrets, CORS/rate limiting)
+  - 5 listings de code : Dockerfile multi-stage, Docker Compose prod, CI GitHub Actions (tests), Auto-update submodules, Prometheus config
+  - 2 tableaux booktabs : images Docker GHCR, ports exposés
+  - Navigue le réseau `monitoring` — utilise les noms de conteneurs (lockbits_edr) plutôt que les noms de services (edr-server) pour éviter le round-robin DNS
+- `docs/latex/chapters/07-annexes.tex` (créé le 2026-07-04)
+  - 4 sections : Ports/protocoles, Commandes, Glossaire, Références
+  - Utilise `longtable` pour le glossaire (19 entrées)
+  - Utilise `lstlisting[language=dockerbash]` pour les blocs de commandes
+  - Utilise `booktabs` (`\toprule`, `\midrule`, `\bottomrule`) pour les tableaux
+  - Environ 4-5 pages estimées
+- `docs/latex/chapters/02-architecture-globale.tex` (créé le 2026-07-04)
+  - 6 sections, 6 sous-sections — Architecture globale complète
+  - 2 diagrammes TikZ : architecture globale (5 niveaux) + flux de données (7 composants)
+  - 1 tableau booktabs stack technique (11 lignes)
+  - Contenu : Vue d'ensemble couches, 6 principes architecturaux, Composants/flux, Sous-modules Git, Justification 6 choix tech, Évolution 3 phases
+  - Utilise `\begin{figure}[H]` avec `tikzpicture` pour les diagrammes
+  - Styles TikZ : `box`, `db` (cylinder), `ext`, `mono`, `layer`, `arrow`, `arrowlabel`
+  - Utilise `\begin{description}` pour les couches architecturales
+  - Utilise `\begin{verbatim}` pour l'arborescence des dépôts
+  - Environ 5-6 pages estimées
+- `docs/latex/chapters/05-gouvernance.tex` (créé le 2026-07-04)
+  - 5 sections, 10 sous-sections — Gouvernance complète
+  - Contenu : Organisation équipe (tableau booktabs rôles), Méthodologie Agile, Risques (tableau booktabs), Plan déploiement 6 phases, Critères MVP
+  - Utilise `\begin{table}[h]` avec `\toprule/\midrule/\bottomrule` (booktabs) pour les tableaux
+- Utilise `\begin{description}` pour les rituels de l'équipe
+- Environ 3-4 pages estimées en sortie PDF
+- `docs/latex/chapters/03-composants-applicatifs.tex` (créé le 2026-07-04)
+  - 4 sections majeures : EDR Server, EDR Agent, Site Client, Chatbot
+  - Section EDR Server : 6 sous-sections (archi, API REST, DB, VT, GLPI, métriques, dockerisation)
+  - Section EDR Agent : 4 sous-sections (archi, fonctionnalités, PyInstaller, déploiement)
+  - Section Site Client : 5 sous-sections (archi, modules, DB MySQL, GLPI SSO, dockerisation)
+  - Section Chatbot : 3 sous-sections (archi, fonctionnalités, sécurité)
+  - 8 listings de code : Python (healthcheck, modèle ORM, classe agent), Bash (lancement, docker, installation), PHP (PDO, chat payload)
+  - Langages listings : Python, PHP, bash
+  - Utilise `\paragraph{}` pour les sous-points dans les sections fonctionnalités
+  - Utilise `\texttt{}` pour les endpoints API, noms de fichiers, variables d'environnement
+  - `\oe{}` pour le caractère œ dans "cœur"
+  - Environ 6-8 pages estimées
