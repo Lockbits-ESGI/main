@@ -1,0 +1,252 @@
+% ==============================================================================
+% Chapitre 1 : Introduction
+% Contexte, objectifs, périmètre, méthodologie et organisation du document
+% ==============================================================================
+
+\chapter{Introduction}
+
+\section{Contexte du projet}
+
+\subsection{Cadre académique}
+
+Ce dossier d'architecture s'inscrit dans le cadre du projet annuel de
+2\textsuperscript{e} année à l'\textbf{ESGI} (École Supérieure de Génie
+Informatique) de Paris. Le projet fil rouge se déroule sur l'année
+2025--2026 et constitue la principale évaluation pratique du cursus. Il
+réunit une équipe de quatre étudiants dont la mission est de réaliser un
+projet informatique complet, de la phase de conception jusqu'au
+déploiement, en passant par le développement, les tests et la mise en
+production.
+
+L'objectif pédagogique est de confronter les étudiants à l'ensemble des
+étapes du cycle de vie d'un logiciel, dans des conditions proches de
+celles rencontrées en entreprise. Le projet doit non seulement
+fonctionner techniquement, mais aussi respecter des contraintes de
+qualité, de sécurité et de maintenabilité.
+
+\subsection{Entreprise fictive : LockBits}
+
+\textbf{LockBits} est une entreprise fictive de cybersécurité créée dans
+le cadre de ce projet. Elle propose une solution \textbf{EDR} (Endpoint
+Detection \& Response) open-source, associée à un portail client pour la
+gestion des abonnés.
+
+La solution EDR permet aux entreprises de détecter les menaces sur leurs
+postes de travail (endpoints) et d'y répondre de manière orchestrée.
+Elle se compose de deux éléments principaux~: d'une part un serveur
+central qui collecte et analyse les données de sécurité, d'autre part un
+agent déployé sur chaque machine à protéger. Le portail client complète
+l'offre en offrant une interface web de gestion, de visualisation et de
+support.
+
+LockBits se positionne comme une alternative open-source aux solutions
+EDR propriétaires du marché. Le choix de l'open-source permet à la fois
+de démontrer la transparence de la solution et de faciliter son adoption
+par les entreprises soucieuses de maîtriser leur outillage de sécurité.
+
+\subsection{Enjeux et défis}
+
+Le projet LockBits couvre l'ensemble du cycle de vie logiciel, ce qui
+introduit plusieurs enjeux majeurs.
+
+Sur le plan technique, l'architecture est complète et hétérogène~: un
+backend en Python/FastAPI, un frontend web en PHP, une base de données
+relationnelle, un système de monitoring, et une chaîne d'intégration et
+de déploiement continus. Chaque composant doit s'intégrer harmonieusement
+avec les autres.
+
+Sur le plan de la sécurité, le produit manipule des données système
+sensibles~: processus en cours d'exécution, connexions réseau, fichiers
+suspects. La collecte et le traitement de ces informations imposent des
+mesures de protection strictes, tant au niveau du transport que du
+stockage. La solution doit respecter les principes de moindre
+privilège et de défense en profondeur.
+
+Sur le plan de la disponibilité, le service EDR est critique pour les
+clients. Une interruption de la détection expose l'entreprise à des
+risques de sécurité. Le système doit donc être résilient et permettre
+des mises à jour sans interruption de service.
+
+\section{Objectifs du projet}
+
+\subsection{Objectifs techniques}
+
+Le projet LockBits poursuit sept objectifs techniques principaux~:
+
+\begin{enumerate}
+  \item \textbf{Serveur EDR}~: développer un serveur en FastAPI/Python
+    exposant une API REST pour la collecte des données des agents, le
+    stockage des rapports et l'analyse de fichiers suspects via
+    VirusTotal.
+  \item \textbf{Agent EDR}~: créer un agent déployable sur les endpoints
+    Linux, disponible sous forme de binaire portable et d'image Docker,
+    capable de collecter les processus, les connexions réseau et les
+    événements de modification de fichiers (FIM).
+  \item \textbf{Site client web}~: réaliser un portail client en
+    PHP/Apache avec authentification, tableau de bord, gestion des
+    abonnés et système de tickets de support.
+  \item \textbf{Chatbot intelligent}~: intégrer un assistant virtuel au
+    site client, alimenté par l'API Claude d'Anthropic, pour répondre
+    aux questions courantes des utilisateurs.
+  \item \textbf{Pipeline CI/CD}~: automatiser l'intégration et le
+    déploiement via GitHub Actions, avec des étapes de lint, test, build
+    multi-architecture, scan de sécurité et déploiement.
+  \item \textbf{Monitoring et observabilité}~: mettre en place une
+    infrastructure de supervision avec Prometheus, Grafana et Loki pour
+    assurer la visibilité sur l'état du système.
+  \item \textbf{Déploiement automatisé}~: fournir un script d'installation
+    one-liner (install.sh) pour déployer l'intégralité de la stack en
+    quelques commandes.
+\end{enumerate}
+
+\subsection{Objectifs pédagogiques}
+
+Au-delà des objectifs techniques, le projet vise des objectifs
+pédagogiques précis. Les étudiants doivent mettre en pratique les
+compétences acquises durant leur formation~: développement logiciel,
+conception d'architecture, administration système et gestion de bases de
+données.
+
+La gestion de projet occupe une place centrale. L'équipe doit organiser
+son travail, répartir les tâches, tenir des réunions hebdomadaires et
+respecter des sprints de deux semaines. Cette organisation reproduit les
+méthodes agiles utilisées en entreprise.
+
+Le projet introduit également les outils \textbf{DevOps} modernes~:
+Docker pour la conteneurisation, GitHub Actions pour l'intégration
+continue, Prometheus et Grafana pour le monitoring. Ces compétences sont
+aujourd'hui essentielles dans le monde professionnel.
+
+\section{Périmètre et contraintes}
+
+\subsection{Périmètre fonctionnel}
+
+Le périmètre fonctionnel du projet LockBits couvre les domaines
+suivants~:
+
+\begin{itemize}
+  \item \textbf{Détection et réponse sur endpoints}~: collecte en
+    continu des processus actifs, des connexions réseau et des
+    modifications du système de fichiers. L'agent peut fonctionner en
+    mode scan (analyse ponctuelle) ou en mode monitor (surveillance en
+    temps réel).
+  \item \textbf{Portail client}~: inscription et connexion des clients,
+    tableau de bord avec les alertes de sécurité, gestion du profil et
+    abonnement, système de tickets de support.
+  \item \textbf{Chatbot assistant}~: assistant virtuel intégré au portail
+    pour répondre aux questions fréquentes et orienter les utilisateurs
+    vers les ressources appropriées.
+  \item \textbf{Mise à jour automatique}~: les composants peuvent se
+    mettre à jour automatiquement via un mécanisme de cron, garantissant
+    que les clients bénéficient toujours des dernières correctifs de
+    sécurité.
+  \item \textbf{Intégration VirusTotal}~: analyse des fichiers suspects
+    remontés par les agents via l'API publique de VirusTotal, avec
+    enrichissement automatique des rapports.
+  \item \textbf{Intégration GLPI}~: synchronisation avec GLPI pour la
+    gestion des tickets IT, avec possibilité de SSO (Single Sign-On)
+    entre le portail client et l'outil de ticketing.
+\end{itemize}
+
+\subsection{Contraintes techniques}
+
+La stack technique est imposée par le cahier des charges du projet~:
+
+\begin{itemize}
+  \item \textbf{EDR Server}~: Python avec FastAPI, base de données
+    SQLite pour le stockage local des rapports.
+  \item \textbf{Site client}~: PHP 8+ avec Apache, base de données MySQL
+    8.0.
+  \item \textbf{Conteneurisation}~: Docker avec Docker Compose pour
+    l'orchestration des services.
+  \item \textbf{CI/CD}~: GitHub Actions pour l'automatisation des
+    pipelines, GitHub Container Registry (GHCR) pour le stockage des
+    images.
+  \item \textbf{Déploiement}~: Docker Compose en production, avec
+    Dokploy comme plateforme d'hébergement.
+  \item \textbf{Architecture matérielle}~: support des architectures
+    \texttt{linux/amd64} et \texttt{linux/arm64}.
+\end{itemize}
+
+\subsection{Contraintes organisationnelles}
+
+L'équipe est composée de quatre étudiants, ce qui impose une répartition
+claire des responsabilités. Le projet se déroule sur environ huit mois,
+de septembre à avril. Les composants sont développés en parallèle via
+des sous-modules Git, chaque sous-module étant un dépôt indépendant avec
+son propre cycle de développement.
+
+Le travail est organisé en sprints de deux semaines, avec des réunions
+hebdomadaires de suivi. Cette organisation permet de détecter
+rapidement les blocages et d'ajuster les priorités.
+
+\section{Méthodologie et approche}
+
+\subsection{Approche itérative}
+
+Le développement de LockBits suit une approche itérative et
+incrémentale. Chaque composant est développé indépendamment dans son
+propre dépôt, avec des cycles de validation courts. Une fois qu'un
+composant atteint un état fonctionnel, il est intégré à la stack
+globale via le dépôt principal qui orchestre l'ensemble via les
+sous-modules Git.
+
+Cette approche présente plusieurs avantages. Elle permet de paralléliser
+le travail entre les membres de l'équipe. Elle réduit les risques
+d'intégration en détectant les incompatibilités tôt. Elle offre une
+visibilité continue sur l'avancement, chaque sous-module produisant des
+livrables intermédiaires.
+
+Chaque itération comprend les phases suivantes~:
+définition des objectifs, développement, tests, intégration et revue.
+Les retours d'une itération alimentent la planification de la suivante.
+
+\subsection{Principes de conception}
+
+La conception de l'architecture repose sur cinq principes fondamentaux~:
+
+\begin{enumerate}
+  \item \textbf{Modularité}~: chaque composant est indépendant et
+    communique via des interfaces clairement définies (API REST). Les
+    composants sont développés dans des dépôts Git distincts, liés par
+    des sous-modules.
+  \item \textbf{Conteneurisation}~: tous les services sont empaquetés
+    dans des images Docker multi-architecture, garantissant la
+    reproductibilité des déploiements et la portabilité entre les
+    environnements.
+  \item \textbf{Infrastructure as Code}~: l'ensemble de la chaîne
+    d'intégration et de déploiement est automatisée via GitHub Actions.
+    La configuration des services est versionnée et déployée de manière
+    reproductible.
+  \item \textbf{Sécurité dès la conception}~: les principes de sécurité
+    sont intégrés à chaque étape du pipeline~: scan des vulnérabilités
+    avec Trivy, gestion des secrets via variables d'environnement,
+    rate limiting sur les endpoints exposés, validation des entrées.
+  \item \textbf{Observabilité}~: le système produit des métriques, des
+    logs et des alertes permettant de diagnostiquer les problèmes et
+    d'anticiper les dégradations. Prometheus collecte les métriques,
+    Grafana les visualise et Loki centralise les logs.
+\end{enumerate}
+
+\section{Organisation du document}
+
+Ce dossier d'architecture est organisé en sept chapitres~:
+
+\begin{itemize}
+  \item \textbf{Chapitre 2~: Architecture globale}~: présente la vue
+    d'ensemble du système, les diagrammes d'architecture, les choix
+    techniques fondamentaux et les flux de données entre les composants.
+  \item \textbf{Chapitre 3~: Composants applicatifs}~: détaille chaque
+    composant du système~: le serveur EDR, l'agent EDR, le portail
+    client, l'intégration GLPI et le chatbot.
+  \item \textbf{Chapitre 4~: Infrastructure et déploiement}~: décrit
+    l'infrastructure Docker, le pipeline CI/CD, le monitoring et les
+    mesures de sécurité.
+  \item \textbf{Chapitre 5~: Gouvernance}~: présente l'organisation de
+    l'équipe, la méthodologie de travail, la gestion des risques et les
+    jalons du projet.
+  \item \textbf{Chapitre 6~: Extensions et évolutions}~: explore les
+    pistes d'amélioration et la roadmap du projet.
+  \item \textbf{Chapitre 7~: Annexes}~: regroupe le glossaire, les
+    références techniques et les commandes utiles.
+\end{itemize}

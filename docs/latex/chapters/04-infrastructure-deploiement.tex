@@ -1,0 +1,530 @@
+% ==============================================================================
+% Chapitre 4 : Infrastructure et Deploiement
+% Docker, CI/CD, scripts, monitoring, securite
+% ==============================================================================
+
+\chapter{Infrastructure et Déploiement}
+
+Ce chapitre décrit l'infrastructure technique qui supporte l'ensemble du
+système LockBits. Il couvre la conteneurisation avec Docker, le pipeline
+d'intégration et de déploiement continus avec GitHub Actions, les scripts
+d'installation et de maintenance, la stack de monitoring, ainsi que les
+mesures de sécurité mises en œuvre.
+
+\section{Docker et Conteneurisation}
+
+\subsection{Stratégie de conteneurisation}
+
+La conteneurisation est au cœur de l'architecture LockBits. Chaque composant du
+système possède son propre \texttt{Dockerfile} et est empaqueté dans une image
+Docker autonome. Cette approche garantit la reproductibilité des déploiements
+et la portabilité entre les environnements de développement, de pré-production
+et de production.
+
+Les images sont construites avec \textbf{Docker Buildx} pour supporter deux
+architectures matérielles~: \texttt{linux/amd64} (x86\_64) et
+\texttt{linux/arm64} (AArch64). Cette compatibilité multi-architecture permet
+de déployer la stack aussi bien sur des serveurs x86 traditionnels que sur des
+instances ARM plus économes en énergie (AWS Graviton, Raspberry Pi pour les
+tests). Une fois construites, les images sont publiées sur le \textbf{GitHub
+Container Registry (GHCR)} avec plusieurs Tags~:
+
+\begin{itemize}
+  \item \texttt{latest}~: dernier build validé de la branche \texttt{main}.
+  \item \texttt{develop}~: dernier build de la branche \texttt{develop}.
+  \item \texttt{vX.Y.Z}~: version sémantique pour les releases officielles.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Images Docker du projet LockBits}
+\label{tab:images-docker}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{Image GHCR} & \textbf{Composant} & \textbf{Technologie} & \textbf{Description} \\
+\midrule
+\texttt{ghcr.io/lockbits-esgi/edr} & Serveur EDR & Python / FastAPI & API REST de détection et réponse \\
+\texttt{ghcr.io/lockbits-esgi/edr-agent} & Agent EDR & Python / PyInstaller & Agent de collecte déployable \\
+\texttt{ghcr.io/lockbits-esgi/site\_lockbits} & Portail client & PHP 8+ / Apache & Site web de gestion clients \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Dockerfiles multi-stage}
+
+Les \texttt{Dockerfile} utilisent une construction en deux étapes (multi-stage
+build) pour réduire la taille des images finales. La première étape (\emph{builder})
+installe les dépendances de compilation, tandis que la seconde étape (\emph{final})
+ne contient que les dépendances d'exécution et le code applicatif.
+
+Extrait du Dockerfile du serveur EDR~:
+
+\begin{lstlisting}[language=dockerbash, caption={Dockerfile multi-stage du serveur EDR}, label={lst:dockerfile-edr}]
+# Stage 1: Builder
+FROM python:3.14-slim AS builder
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \\
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Stage 2: Final
+FROM python:3.14-slim
+WORKDIR /app
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \\
+    --no-install-recommends curl \\
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:\$PATH
+COPY . .
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\
+    CMD curl -f http://localhost:8000/health || exit 1
+CMD ["python", "-m", "uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+\end{lstlisting}
+
+Cette approche présente plusieurs avantages. La taille de l'image finale est
+réduite, ce qui accélère les téléchargements et diminue la surface d'attaque.
+Les dépendances sont figées dans l'image, garantissant un environnement
+d'exécution identique en développement et en production. Enfin, le healthcheck
+intégré permet à Docker de surveiller l'état du service et de redémarrer
+automatiquement le conteneur en cas de défaillance.
+
+\subsection{Docker Compose}
+
+L'orchestration des services est gérée par Docker Compose. Trois fichiers de
+composition couvrent les différents environnements~:
+
+\begin{itemize}
+  \item \textbf{\texttt{docker-compose.yml}}~: environnement de développement
+    local. Les images sont construites depuis les sources (directive
+    \texttt{build}) avec rechargement à chaud.
+  \item \textbf{\texttt{docker-compose.prod.yml}}~: environnement de
+    production. Les images sont tirées depuis GHCR avec le tag \texttt{:latest}
+    et la politique de téléchargement \texttt{pull\_policy: always}.
+  \item \textbf{\texttt{docker-compose.preprod.yml}}~: environnement de
+    pré-production. Les images utilisent le tag \texttt{:develop}, avec des
+    noms de conteneurs suffixés par \texttt{\_preprod} pour éviter les conflits
+    avec la stack de production.
+\end{itemize}
+
+Chaque fichier de composition définit un \texttt{project name} explicite
+(\texttt{lockbits-prod} ou \texttt{lockbits-preprod}) pour garantir l'isolation
+des réseaux Docker entre les environnements. Sans cette précaution, les
+réseaux partagés (notamment le réseau \texttt{monitoring}) provoqueraient un
+round-robin DNS entre les instances de production et de pré-production.
+
+Extrait du fichier \texttt{docker-compose.prod.yml}~:
+
+\begin{lstlisting}[language=dockercompose, caption={Extrait du docker-compose.prod.yml -- service EDR}, label={lst:docker-compose-prod}]
+services:
+  edr-server:
+    image: ghcr.io/lockbits-esgi/edr:latest
+    container_name: lockbits_edr
+    pull_policy: always
+    depends_on:
+      edr-db:
+        condition: service_healthy
+    ports:
+      - "${EDR_PORT:-8001}:8000"
+    environment:
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8000"
+      DATABASE_URL: ${EDR_DATABASE_URL:-postgresql://${EDR_DB_USER:-edr}:${EDR_DB_PASS}@edr-db/${EDR_DB_NAME:-edr}}
+      AUTH_TOKEN: ${EDR_AUTH_TOKEN}
+      VT_ENABLED: ${VT_ENABLED:-false}
+    volumes:
+      - edr_data:/app/data
+    networks:
+      - frontend
+      - backend
+      - monitoring
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+\end{lstlisting}
+
+Le service \texttt{edr-server} utilise une base PostgreSQL hébergée dans un
+conteneur dédié (\texttt{edr-db}) avec des limites de ressources explicites.
+Les variables d'environnement critiques (mot de passe de base, token d'auth)
+sont passées via le fichier \texttt{.env} et n'apparaissent jamais en dur dans
+la configuration.
+
+\subsection{Réseau Docker}
+
+L'infrastructure réseau est segmentée en trois réseaux bridge distincts,
+chacun avec un niveau d'exposition différent~:
+
+\begin{itemize}
+  \item \textbf{Réseau \texttt{frontend}}~: exposé sur l'hôte, il connecte le
+    serveur EDR et le site web. Seuls ces deux services sont accessibles
+    depuis l'extérieur via les ports publiés.
+  \item \textbf{Réseau \texttt{backend}}~: réseau interne qui connecte le
+    serveur EDR à sa base de données PostgreSQL. Aucun port n'est exposé sur
+    l'hôte pour ce réseau.
+  \item \textbf{Réseau \texttt{monitoring}}~: réseau interne dédié aux
+    services de supervision (Prometheus, Grafana, Loki, Alloy). Les services
+    applicatifs y sont connectés pour exposer leurs métriques, mais le réseau
+    lui-même n'est pas directement accessible depuis l'extérieur.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\caption{Ports exposés par les services LockBits}
+\label{tab:ports-exposes}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{Service} & \textbf{Port hôte} & \textbf{Port conteneur} & \textbf{Usage} \\
+\midrule
+Serveur EDR & 8001 & 8000 & API REST EDR \\
+Site web & 8080 & 80 & Portail client HTTP \\
+Prometheus & 9092 / 9090 & 9090 & Métriques (prod / preprod) \\
+Grafana & 3002 / 3001 & 3000 & Tableaux de bord (prod / preprod) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{CI/CD avec GitHub Actions}
+
+\subsection{Pipeline CI}
+
+Le pipeline d'intégration continue est défini dans le fichier
+\texttt{.github/workflows/build-and-push.yml}. Il se déclenche sur chaque push
+sur les branches \texttt{main} et \texttt{develop}, ainsi que sur les pull
+requests vers ces branches. Le pipeline se déroule en quatre étapes
+principales~:
+
+\begin{enumerate}
+  \item \textbf{Lint}~: vérification du code Python du serveur EDR avec Ruff
+    (lint et format), exécutée en parallèle des tests.
+  \item \textbf{Tests}~: tests unitaires avec pytest pour le serveur EDR,
+    PHPUnit pour le site web, et tests d'intégration (smoke tests) avec des
+    conteneurs Docker lancés dans le runner CI.
+  \item \textbf{Build et push}~: construction des images Docker multi-architecture
+    avec Docker Buildx, puis publication sur GHCR. Cette étape ne s'exécute
+    que pour les pushes (pas pour les pull requests).
+  \item \textbf{Scan de sécurité}~: analyse des images publiées avec Trivy
+    pour détecter les vulnérabilités CRITICAL et HIGH.
+\end{enumerate}
+
+\begin{lstlisting}[language=yaml, caption={Extrait du pipeline CI -- tests unitaires EDR}, label={lst:ci-edr-tests}]
+jobs:
+  lint-edr:
+    name: "EDR - Ruff lint + format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Ruff
+        run: pip install ruff
+      - name: Ruff check
+        working-directory: edr
+        run: ruff check --output-format=github
+      - name: Ruff format check
+        working-directory: edr
+        run: ruff format --check
+
+  test-edr-unit:
+    name: "EDR - Unit tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: edr/requirements.txt
+      - name: Install dependencies
+        run: pip install -r edr/requirements.txt
+      - name: Run pytest
+        working-directory: edr
+        run: pytest tests/ -v --tb=short
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          VT_ENABLED: "false"
+\end{lstlisting}
+
+La construction des images est réalisée à l'aide de l'action
+\texttt{docker/build-push-action} avec la prise en charge de la cache
+GitHub Actions (\texttt{cache-from}/\texttt{cache-to}) pour accélérer les
+builds successifs.
+
+\subsection{Mise à jour automatique des submodules}
+
+Le dépôt principal orchestre les composants via des sous-modules Git. Un
+workflow dédié (\texttt{auto-update-submodules.yml}) vérifie périodiquement
+si les sous-modules ont de nouveaux commits. Si c'est le cas, il met à jour
+la référence, crée un commit et le pousse sur la branche \texttt{develop}, ce
+qui déclenche automatiquement le pipeline CI et le rebuild des images.
+
+\begin{lstlisting}[language=yaml, caption={Workflow de mise à jour automatique des submodules}, label={lst:auto-update-submodules}]
+name: Auto-update submodules
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Update submodules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: develop
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update submodules to latest remote
+        run: |
+          git fetch --deepen=100 origin 2>/dev/null || true
+          git submodule update --remote
+
+      - name: Check if anything changed
+        id: diff
+        run: |
+          if git diff --quiet --exit-code; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "LockBits Bot"
+          git config user.email "bot@lockbits-esgi"
+          git add -u
+          git commit -m "chore: auto-update submodules"
+          git push origin develop
+\end{lstlisting}
+
+Ce mécanisme entièrement automatisé permet de maintenir les sous-modules à jour
+sans intervention humaine. La synchronisation a lieu une fois par jour à 6h
+UTC, ce qui correspond à un rythme raisonnable compte tenu de la fréquence des
+mises à jour des composants.
+
+\subsection{Déploiement automatisé (Dokploy)}
+
+Après la construction et la publication des images, le pipeline déclenche le
+déploiement via un webhook \textbf{Dokploy}. Deux webhooks sont configurés~:
+
+\begin{itemize}
+  \item Un webhook pour la production (branche \texttt{main}) qui redéploie la
+    stack avec les images \texttt{:latest}.
+  \item Un webhook pour la pré-production (branche \texttt{develop}) qui
+    redéploie la stack avec les images \texttt{:develop}.
+\end{itemize}
+
+Le déclenchement est réalisé par une requête HTTP POST vers l'URL du webhook
+configurée dans les \texttt{secrets} GitHub. Les tokens Dokploy sont stockés
+dans les \textbf{secrets GitHub} (\texttt{DOKPLOY\_PROD\_HOOK} et
+\texttt{DOKPLOY\_PREPROD\_HOOK}) et ne sont jamais exposés dans le code source.
+
+\section{Scripts d'installation et maintenance}
+
+\subsection{install.sh}
+
+Le script \texttt{install.sh} est le point d'entrée principal pour le
+déploiement de la stack LockBits. Il s'exécute en une seule commande sans
+nécessiter de clonage du dépôt~:
+
+\begin{lstlisting}[language=dockerbash, caption={Commande d'installation one-liner}, label={lst:install-oneliner}]
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash
+\end{lstlisting}
+
+Le script supporte plusieurs modes d'exécution~:
+
+\begin{itemize}
+  \item \textbf{Mode par défaut}~: installation complète de la stack. Le script
+    télécharge les fichiers de configuration (\texttt{docker-compose.prod.yml}
+    et \texttt{.env.example}), vérifie que Docker est installé, crée le fichier
+    \texttt{.env}, tente de se connecter à GHCR (si un \texttt{GITHUB\_TOKEN}
+    est fourni), puis lance la stack avec \texttt{docker compose up -d}.
+  \item \texttt{--update}~: mise à jour rapide. Le script détecte les nouvelles
+    variables d'environnement, redémarre la stack avec les dernières images et
+    valide le bon fonctionnement des services.
+  \item \texttt{--cron}~: installation d'une tâche cron pour la mise à jour
+    automatique. Par défaut toutes les 5 minutes (configurable avec
+    \texttt{--interval=N}).
+  \item \texttt{--env=preprod}~: déploiement en pré-production avec le fichier
+    \texttt{docker-compose.preprod.yml}.
+  \item \texttt{--update-sources}~: mise à jour des références des sous-modules
+    Git (depuis un clone du dépôt), suivie d'un commit et d'un push pour
+    déclencher la CI.
+\end{itemize}
+
+Le script intègre également une validation de sécurité qui vérifie que les mots
+de passe par défaut ont été remplacés avant le déploiement en production, et
+refuse de continuer si ce n'est pas le cas.
+
+\subsection{install-agent.sh}
+
+Le script \texttt{install-agent.sh} est conçu pour le déploiement de l'agent
+EDR sur les machines des clients. Il peut fonctionner selon deux modes~:
+
+\begin{itemize}
+  \item \textbf{Mode binaire}~: télécharge le binaire standalone (compilé avec
+    PyInstaller) depuis les \textbf{GitHub Releases} et l'installe dans
+    \texttt{/usr/local/bin/}. Un service systemd est créé pour assurer le
+    démarrage automatique au boot.
+  \item \textbf{Mode Docker}~: télécharge l'image GHCR de l'agent et configure
+    un conteneur Docker avec les droits nécessaires (mode privilégié, accès au
+    PID de l'hôte, montage du système de fichiers en lecture seule).
+\end{itemize}
+
+\begin{lstlisting}[language=dockerbash, caption={Installation de l'agent EDR (mode binaire)}, label={lst:install-agent}]
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \\
+  SERVER_URL=https://edr.example.com AUTH_TOKEN=token bash
+\end{lstlisting}
+
+L'agent supporte les architectures \texttt{amd64} et \texttt{arm64}. La
+détection se fait automatiquement au moment de l'installation. Un fichier de
+configuration YAML est généré dans \texttt{/etc/lockbits-agent/config.yaml}
+avec les paramètres de connexion, la configuration du File Integrity Monitoring
+(FIM) et le niveau de journalisation.
+
+\subsection{backup.sh / restore.sh}
+
+Les scripts \texttt{backup.sh} et \texttt{restore.sh} assurent la sauvegarde et
+la restauration des données de l'infrastructure.
+
+\texttt{backup.sh} crée des sauvegardes horodatées contenant~:
+
+\begin{itemize}
+  \item La base de données MySQL (dump via \texttt{mysqldump} avec les options
+    \texttt{--single-transaction}, \texttt{--routines}, \texttt{--triggers}).
+  \item La base de données PostgreSQL du serveur EDR (dump via \texttt{pg\_dump}
+    avec \texttt{--clean} et \texttt{--if-exists}).
+  \item En l'absence de PostgreSQL, les données du volume EDR sont sauvegardées
+    via \texttt{docker cp}.
+  \item Les fichiers de configuration (\texttt{.env}, \texttt{docker-compose*.yml}).
+\end{itemize}
+
+La rotation des sauvegardes conserve les 7 derniers jours. Le script
+\texttt{restore.sh} liste les sauvegardes disponibles, valide leur contenu,
+puis restaure chaque composant de manière interactive après confirmation de
+l'utilisateur.
+
+\section{Monitoring et Observabilité}
+
+\subsection{Stack technique}
+
+La supervision de l'infrastructure repose sur la stack \textbf{PLA}
+(Prometheus, Loki, Alloy, Grafana)~:
+
+\begin{itemize}
+  \item \textbf{Prometheus}~: collecte les métriques des services exposant un
+    endpoint \texttt{/metrics}. Chaque service applicatif (EDR, site web) est
+    configuré comme cible de scraping.
+  \item \textbf{Grafana}~: visualisation des métriques via des dashboards
+    pré-configurés. L'authentification est requise en production, avec des
+    identifiants administrateur définis dans les variables d'environnement.
+  \item \textbf{Loki}~: agrégation centralisée des logs applicatifs. Il stocke
+    les logs sous forme compressée et les rend interrogeables via Grafana.
+  \item \textbf{Alloy}~: collecteur de logs Docker qui lit les fichiers JSON
+    des conteneurs sur le système hôte et les achemine vers Loki.
+\end{itemize}
+
+\begin{lstlisting}[language=yaml, caption={Configuration Prometheus pour le scraping des services}, label={lst:prometheus-config}]
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "lockbits_edr"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["lockbits_edr:8000"]
+
+  - job_name: "lockbits_site"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["lockbits_web:80"]
+\end{lstlisting}
+
+Les cibles de scraping utilisent les noms de conteneurs (\texttt{lockbits\_edr},
+\texttt{lockbits\_web}) plutôt que les noms de services Docker Compose
+(\texttt{edr-server}, \texttt{site-web}). Cette précaution évite le round-robin
+DNS qui se produirait si les deux stacks (production et pré-production)
+partageaient le même réseau Dokploy.
+
+\subsection{Métriques collectées}
+
+Le système expose trois catégories de métriques~:
+
+\begin{itemize}
+  \item \textbf{Métriques applicatives EDR}~: nombre de requêtes API, temps de
+    réponse, événements de sécurité traités, nombre d'agents actifs, taille de
+    la file d'attente de rapports.
+  \item \textbf{Métriques système}~: utilisation CPU, mémoire, disque et réseau
+    des conteneurs, collectées via cAdvisor.
+  \item \textbf{Métriques Docker}~: état des conteneurs (running, stopped,
+    unhealthy), nombre de redémarrages, âge des conteneurs.
+\end{itemize}
+
+Les dashboards Grafana sont provisionnés automatiquement via le répertoire
+\texttt{docker/grafana/provisioning/} qui contient les définitions des sources
+de données et des tableaux de bord au format JSON.
+
+\section{Sécurité de l'infrastructure}
+
+\subsection{Scan Trivy}
+
+Chaque image Docker est analysée par \textbf{Trivy} après sa publication sur
+GHCR. Le scan recherche les vulnérabilités de niveau CRITICAL et HIGH, tant au
+niveau du système d'exploitation que des bibliothèques logicielles. Le scan est
+configuré en mode rapport (\texttt{exit-code: "0"})~: il ne bloque pas le
+déploiement mais produit un rapport visible dans l'interface GitHub Actions.
+Cette approche permet aux développeurs de prendre connaissance des
+vulnérabilités sans interrompre le cycle de déploiement.
+
+\subsection{Gestion des secrets}
+
+La gestion des secrets suit les pratiques de sécurité suivantes~:
+
+\begin{itemize}
+  \item \textbf{Fichier \texttt{.env}}~: toutes les variables sensibles (mots
+    de passe, tokens API, clés d'authentification) sont stockées dans un
+    fichier \texttt{.env} qui n'est jamais commité (protégé par
+    \texttt{.gitignore}). Le fichier \texttt{.env.example} fournit les noms des
+    variables avec des valeurs par défaut.
+  \item \textbf{Secrets GitHub}~: les tokens nécessaires à la CI/CD (GHCR,
+    webhooks Dokploy) sont stockés dans les secrets du dépôt GitHub et injectés
+    dans les workflows via la syntaxe \texttt{\${{ secrets.\textless{}nom\textgreater{}}}}.
+  \item \textbf{Fichiers exclus}~: le \texttt{.gitignore} protège les fichiers
+    sensibles~: \texttt{.env}, \texttt{miniedr.db}, \texttt{dist/},
+    \texttt{build/}, \texttt{venv/}.
+\end{itemize}
+
+\subsection{CORS et rate limiting}
+
+L'API REST du serveur EDR est protégée par deux mécanismes~:
+
+\begin{itemize}
+  \item \textbf{CORS}~: la configuration \texttt{CORS\_ORIGINS} permet de
+    restreindre les origines autorisées à accéder à l'API. En développement,
+    la valeur par défaut \texttt{*} autorise toutes les origines. En
+    production, elle doit être remplacée par l'URL du portail client.
+  \item \textbf{Rate limiting}~: les endpoints de l'API EDR sont protégés par
+    une limitation du nombre de requêtes par intervalle de temps. Le chatbot
+    intégré au site web est limité à 100 requêtes par jour par utilisateur pour
+    maîtriser les coûts de l'API Claude.
+\end{itemize}
+
+Ces mesures de sécurité s'inscrivent dans une stratégie de défense en
+profondeur qui couvre chaque couche de l'infrastructure~: conteneurisation
+isolée, scan des vulnérabilités, gestion centralisée des secrets, et
+protection des API exposées.
