@@ -97,7 +97,7 @@ respectifs.
     \node[mono, below=1.8cm of mysql] (prometheus) {Prometheus};
     \node[mono, right=of prometheus] (grafana) {Grafana};
     \node[mono, right=of grafana] (loki) {Loki + Alloy};
-    \node[mono, right=of loki] (watchtower) {Watchtower};
+    \node[mono, right=of loki] (dokploy) {Dokploy};
 
     % --- Fleches couche presentation ---
     \draw[arrow] (internet) -- node[arrowlabel] {HTTP} (siteweb);
@@ -245,7 +245,7 @@ pour chaque composant de la solution.
     CI/CD              & GitHub Actions       & ---                  & --- \\
     Registry           & GHCR                 & ---                  & --- \\
     Monitoring         & Prometheus / Grafana / Loki & ---          & --- \\
-    Auto-update        & Watchtower           & ---                  & --- \\
+    Déploiement        & Dokploy              & ---                  & --- \\
     \bottomrule
   \end{tabular}
 \end{table}

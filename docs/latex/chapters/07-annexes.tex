@@ -115,12 +115,12 @@ L'agent de sécurité LockBits s'installe sur les machines Linux à protéger~:
 
 \begin{lstlisting}[language=dockerbash, caption=Installation en mode binaire]
 curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
-  SERVER_URL=https://edr.example.com AUTH_TOKEN=token bash
+  SERVER_URL=https://edr.lockbits.pro AUTH_TOKEN=token bash
 \end{lstlisting}
 
 \begin{lstlisting}[language=dockerbash, caption=Installation en mode Docker]
 curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
-  SERVER_URL=https://edr.example.com AUTH_TOKEN=token bash -s -- --mode docker
+  SERVER_URL=https://edr.lockbits.pro AUTH_TOKEN=token bash -s -- --mode docker
 \end{lstlisting}
 
 \begin{lstlisting}[language=dockerbash, caption=Désinstallation de l'agent]
@@ -176,6 +176,10 @@ dans ce dossier d'architecture.
   & Continuous Integration / Continuous Deployment~--~intégration et
   déploiement continus. \\
 
+  \textbf{Cloudflare Zero Trust}
+  & Plateforme de sécurité réseau cloud qui fournit un accès sécurisé
+  via tunnel cloudflared. \\
+
   \textbf{MVP}
   & Minimum Viable Product~--~produit minimum viable, première version
   fonctionnelle d'un logiciel. \\
@@ -214,11 +218,7 @@ dans ce dossier d'architecture.
 
   \textbf{Dokploy}
   & Plateforme de déploiement automatisé pour applications
-  conteneurisées. \\
-
-  \textbf{Watchtower}
-  & Outil de mise à jour automatique des conteneurs Docker, surveillant
-  les changements d'images. \\
+  conteneurisées, déclenchée par webhook GitHub Actions. \\
 
   \textbf{Alloy}
   & Agent de collecte et d'acheminement de logs de la stack Grafana
