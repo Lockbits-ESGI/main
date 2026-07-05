@@ -192,10 +192,10 @@ Grafana & 3002 / 3001 & 3000 & Tableaux de bord (prod / preprod) \\
 \subsection{Pipeline CI}
 
 Le pipeline d'intégration continue est défini dans le fichier
-\texttt{.github/workflows/build-and-push.yml}. Il se déclenche sur chaque push
-sur les branches \texttt{main} et \texttt{develop}, ainsi que sur les pull
-requests vers ces branches. Le pipeline se déroule en quatre étapes
-principales~:
+\texttt{.github/workflows/build-and-push.yml}, un workflow entièrement
+\textbf{homemade} (fait maison). Il se déclenche sur chaque push sur les
+branches \texttt{main} et \texttt{develop}, ainsi que sur les pull requests
+vers ces branches. Le pipeline se déroule en quatre étapes principales~:
 
 \begin{enumerate}
   \item \textbf{Lint}~: vérification du code Python du serveur EDR avec Ruff

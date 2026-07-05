@@ -22,18 +22,18 @@ LockBits adopte une \textbf{architecture en couches} qui separe les
 responsabilites en quatre niveaux distincts :
 
 \begin{description}
-  \item[Couche presentation] Interface utilisateur du portail client et
+  \item[Couche presentation] \\[2pt] Interface utilisateur du portail client et
     chatbot. Elle est assuree par un site web PHP 8+ sur Apache, accessible
     depuis le navigateur via le port 8080.
-  \item[Couche API et services] Logique applicative exposee par le serveur
+  \item[Couche API et services] \\[2pt] Logique applicative exposee par le serveur
     EDR en FastAPI (Python) sur le port 8001. Cette couche traite les
     requetes des agents de detection, orchestre les scans et gere les
     integrations externes.
-  \item[Couche donnees] Persistance des informations. Deux technologies
-    cohabitent : SQLite pour les donnees de l'EDR, et MySQL 8.0 pour les
+  \item[Couche donnees] \\[2pt] Persistance des informations. Deux technologies
+    cohabitent : PostgreSQL pour les donnees de l'EDR, et MySQL 8.0 pour les
     donnees du portail client. Cette separation permet d'isoler les
     responsabilites et d'optimiser chaque stockage pour son usage.
-  \item[Couche monitoring et observabilite] Collecte de metriques, de logs
+  \item[Couche monitoring et observabilite] \\[2pt] Collecte de metriques, de logs
     et de traces via la pile Prometheus, Grafana, Loki et Alloy. Garantit
     la visibilite sur l'etat de l'infrastructure.
 \end{description}
@@ -51,7 +51,8 @@ respectifs.
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[
-    node distance=1.8cm and 2.5cm,
+    scale=0.8,
+    node distance=2.5cm and 3.5cm,
     every node/.style={font=\small},
     box/.style={
       draw=primaryblue, thick, rounded corners=3pt,
@@ -128,14 +129,15 @@ Les composants interagissent selon les modalites suivantes :
 
 \begin{itemize}
   \item Le \textbf{site web} communique avec la base MySQL pour gerer les
-    comptes clients, les tickets et les metriques. Il utilise egalement
-    l'API REST du serveur EDR pour afficher les donnees de securite sur le
-    tableau de bord client.
+    comptes clients, les tickets et les metriques. Les donnees de securite
+    sont basees sur les tickets GLPI synchronises avec le portail.
   \item Le \textbf{serveur EDR} recoit les donnees des agents via une API
     REST authentifiee par jeton (\texttt{AUTH\_TOKEN}). Il les stocke en
-    base SQLite et peut declencher des analyses aupres de VirusTotal.
+    base PostgreSQL et peut declencher des analyses aupres de VirusTotal.
   \item Le \textbf{chatbot} integre au site web dialogue avec l'API Claude
-    d'Anthropic pour repondre aux questions des visiteurs.
+    d'Anthropic pour repondre aux questions des visiteurs. Il peut voir la
+    discussion du ticket GLPI affichee sur la page courante pour fournir
+    une assistance contextuelle.
   \item La \textbf{pile de monitoring} collecte les metriques exposees par
     chaque service via leurs endpoints \texttt{/metrics} et centralise les
     logs via Loki et Alloy.
@@ -240,7 +242,7 @@ pour chaque composant de la solution.
     Agent EDR          & Python + PyInstaller & \texttt{edr/agent/}  & --- \\
     Site web           & PHP 8+ / Apache      & \texttt{site\_lockbits/} & 8080 \\
     Base de donnees site & MySQL 8.0          & ---                  & 3306 \\
-    Base de donnees EDR  & SQLite             & ---                  & --- \\
+    Base de donnees EDR  & PostgreSQL         & ---                  & --- \\
     Chatbot            & PHP / Claude API     & \texttt{site\_lockbits/} & --- \\
     CI/CD              & GitHub Actions       & ---                  & --- \\
     Registry           & GHCR                 & ---                  & --- \\
@@ -259,7 +261,8 @@ avec son protocole et sa direction.
 \begin{figure}[H]
   \centering
   \begin{tikzpicture}[
-    node distance=2.2cm and 3cm,
+    scale=0.85,
+    node distance=2.5cm and 3.5cm,
     every node/.style={font=\small},
     comp/.style={
       draw=primaryblue, thick, rounded corners=3pt,
@@ -486,9 +489,9 @@ serveur.
     utilisee supporte nativement les stacks Docker Compose.
 \end{itemize}
 
-\textbf{Alternative e cartée} : Kubernetes (K3s) est prevu dans la
-roadmap pour la phase d'extension, mais il aurait ajoute une complexite
-prematuree pour le MVP.
+\textbf{Alternative e cartée} : Kubernetes (K3s) a ete ecarte car trop
+complexe pour l'infrastructure actuelle, mais reste une evolution viable
+et coherente a plus long terme.
 
 \subsection{GitHub Actions pour le CI/CD}
 
@@ -497,8 +500,9 @@ prematuree pour le MVP.
     GitHub Actions s'integre sans configuration tierce.
   \item \textbf{Zéro infrastructure} : les runners sont fournis par GitHub,
     sans serveur CI a gerer.
-  \item \textbf{Écosystème riche} : des actions pre-construites existent
-    pour Docker, Trivy, les scans et les deploiements.
+  \item \textbf{Workflows homemade} : les pipelines sont entierement
+    ecrits sur mesure (faits maison), sans utiliser d'actions
+    pre-construites pour la logique metier.
   \item \textbf{Gratuit} : pour un projet open-source, les quotas gratuits
     sont largement suffisants.
 \end{itemize}
@@ -506,14 +510,15 @@ prematuree pour le MVP.
 \subsection{GHCR pour le registry Docker}
 
 \begin{itemize}
-  \item \textbf{Gratuit pour les organisations GitHub} : les images privees
+  \item \textbf{Gratuit pour les organisations GitHub} : les images publiques
     sont autorisees sans limite de stockage.
   \item \textbf{Intégration GitHub} : pas de compte Docker Hub separe a
     gerer. L'authentification utilise le token GitHub existant.
   \item \textbf{Limites de pull élevées} : GHCR offre des quotas plus
-    genereux que Docker Hub pour les images privees.
-  \item \textbf{Scan de vulnérabilités} : GHCR integre des scans de
-    securite pour les images stockees.
+    genereux que Docker Hub pour les images publiques.
+  \item \textbf{Scan de vulnérabilités} : GHCR propose des fonctionnalites
+    de scan de securite, qui peuvent etre utilisees pour analyser les
+    images stockees.
 \end{itemize}
 
 % =============================================================================
@@ -561,7 +566,8 @@ incluent :
   \item SIEM complet avec Wazuh ou ELK.
   \item Authentification OAuth2 complete (Google, Microsoft).
   \item Interface d'administration web dediee a l'EDR.
-  \item Tests de penetration automatises dans la pipeline CI.
+  \item Tests de penetration pourraient etre envisages via des outils
+    comme OWASP ZAP integres a la pipeline CI/CD.
   \item Support IPv6.
 \end{itemize}
 
