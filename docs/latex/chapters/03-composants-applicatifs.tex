@@ -5,28 +5,28 @@
 
 \chapter{Composants Applicatifs}
 
-Ce chapitre decrit en detail les quatre composants applicatifs du systeme
+Ce chapitre décrit en detail les quatre composants applicatifs du système
 LockBits : le serveur EDR, l'agent EDR, le site client et le chatbot.
 Pour chaque composant, nous presentons l'architecture interne, les
 technologies utilisees, les fonctionnalites principales et les modalites
-de deploiement.
+de déploiement.
 
 
 % ==============================================================================
 \section{EDR Server}
 % ==============================================================================
 
-Le serveur EDR (Endpoint Detection and Response) constitue le c\oe{}ur
-central de la plateforme. Il recoit, stocke et analyse les evenements de
-securite remontes par les agents deployes sur les postes clients.
+Le serveur EDR (Endpoint Détection and Response) constitue le c\oe{}ur
+central de la plateforme. Il recoit, stocke et analyse les événements de
+sécurité remontes par les agents deployes sur les postes clients.
 
 % ------------------------------------------------------------------------------
 \subsection{Architecture du serveur}
 % ------------------------------------------------------------------------------
 
-Le serveur est developpe en \textbf{Python 3.12} avec le framework
+Le serveur est développé en \textbf{Python 3.12} avec le framework
 \textbf{FastAPI}. Il repose sur une architecture modulaire ou chaque
-fichier du repertoire \texttt{server/} remplit une responsabilite unique :
+fichier du repertoire \texttt{server/} remplit une responsabilité unique :
 
 \begin{itemize}
   \item \texttt{main.py} -- point d'entree de l'application FastAPI,
@@ -34,33 +34,33 @@ fichier du repertoire \texttt{server/} remplit une responsabilite unique :
   \item \texttt{api.py} -- routeur contenant tous les endpoints REST ;
   \item \texttt{database.py} -- configuration SQLAlchemy et gestion des
     sessions ;
-  \item \texttt{models.py} -- modeles ORM (Agent, Event, HashCache) ;
-  \item \texttt{schemas.py} -- schemas Pydantic pour la validation des
-    donnees ;
+  \item \texttt{models.py} -- modèles ORM (Agent, Event, HashCache) ;
+  \item \texttt{schémas.py} -- schémas Pydantic pour la validation des
+    données ;
   \item \texttt{config.py} -- chargement de la configuration depuis les
     variables d'environnement ;
   \item \texttt{vt\_worker.py} -- worker asynchrone d'enrichissement
     VirusTotal ;
   \item \texttt{glpi\_client.py} -- client de creation de tickets GLPI ;
-  \item \texttt{metrics.py} -- metriques Prometheus personnalisees ;
+  \item \texttt{metrics.py} -- métriques Prometheus personnalisees ;
   \item \texttt{ratelimit.py} -- configuration du rate limiting avec
     slowapi ;
-  \item \texttt{storage.py} -- couche d'acces aux donnees.
+  \item \texttt{storage.py} -- couche d'accès aux données.
 \end{itemize}
 
-Le demarrage du serveur s'effectue avec \texttt{uvicorn}, un serveur ASGI
+Le démarrage du serveur s'effectue avec \texttt{uvicorn}, un serveur ASGI
 performant, via la commande suivante :
 
 \begin{lstlisting}[language=bash, caption={Lancement du serveur EDR}, label={lst:edr-launch}]
 python -m uvicorn server.main:app --host 0.0.0.0 --port 8000
 \end{lstlisting}
 
-Le point d'entree \texttt{main.py} initialise la base de donnees au
-demarrage via le gestionnaire de cycle de vie \texttt{lifespan} de
+Le point d'entree \texttt{main.py} initialise la base de données au
+démarrage via le gestionnaire de cycle de vie \texttt{lifespan} de
 FastAPI. Il configure le middleware CORS, le rate limiting, et expose
 automatiquement un endpoint \texttt{/metrics} pour Prometheus. La
 documentation OpenAPI est accessible a \texttt{/docs} (Swagger UI) sans
-aucune configuration supplementaire.
+aucune configuration supplémentaire.
 
 % ------------------------------------------------------------------------------
 \subsection{API REST}
@@ -70,16 +70,16 @@ Le routeur defini dans \texttt{api.py} expose les endpoints suivants :
 
 \begin{itemize}
   \item \texttt{GET /health} -- healthcheck du serveur (verification base
-    de donnees incluse) ;
+    de données incluse) ;
   \item \texttt{GET /api/v1/stats} -- statistiques globales (nombre
-    d'agents, d'evenements, alertes VT) ;
+    d'agents, d'événements, alertes VT) ;
   \item \texttt{GET /api/v1/agents} -- liste des agents enregistres ;
   \item \texttt{GET /api/v1/agents/\{agent\_id\}} -- detail d'un agent ;
-  \item \texttt{GET /api/v1/events} -- evenements avec filtres optionnels
+  \item \texttt{GET /api/v1/events} -- événements avec filtres optionnels
     (\texttt{agent\_id}, \texttt{event\_type}, \texttt{severity},
     \texttt{hostname}) et pagination (\texttt{page}, \texttt{page\_size}) ;
-  \item \texttt{GET /api/v1/events/\{event\_id\}} -- detail d'un evenement ;
-  \item \texttt{POST /api/v1/events} -- ingestion d'un evenement
+  \item \texttt{GET /api/v1/events/\{event\_id\}} -- detail d'un événement ;
+  \item \texttt{POST /api/v1/events} -- ingestion d'un événement
     (authentifie par \texttt{AUTH\_TOKEN}) ;
   \item \texttt{POST /api/v1/events/batch} -- ingestion par lot ;
   \item \texttt{POST /api/v1/heartbeat} -- heartbeat des agents.
@@ -113,28 +113,28 @@ Tous les endpoints d'ecriture sont proteges par une authentification
 Bearer token. Le token est verifie par la fonction \texttt{verify\_auth}
 qui compare le header \texttt{Authorization} avec la variable
 d'environnement \texttt{AUTH\_TOKEN}. Lorsque \texttt{AUTH\_TOKEN} n'est
-pas definie, l'authentification est desactivee (mode developpement).
+pas definie, l'authentification est desactivee (mode développement).
 
 % ------------------------------------------------------------------------------
-\subsection{Base de donnees}
+\subsection{Base de données}
 % ------------------------------------------------------------------------------
 
 Le serveur utilise \textbf{SQLAlchemy} comme ORM et supporte deux moteurs
-de base de donnees :
+de base de données :
 
 \begin{itemize}
   \item \textbf{PostgreSQL} en production via la variable
     \texttt{DATABASE\_URL} ;
-  \item \textbf{SQLite} possible en developpement (fichier local \texttt{miniedr.db}).
+  \item \textbf{SQLite} possible en développement (fichier local \texttt{miniedr.db}).
 \end{itemize}
 
-Le schema comprend trois tables principales :
+Le schéma comprend trois tables principales :
 
 \begin{itemize}
   \item \texttt{agents} -- stocke les metadonnees des agents (ID,
     hostname, plateforme, version, compagnie, date de premiere et
     derniere connexion, statut) ;
-  \item \texttt{events} -- stocke les evenements de securite (type,
+  \item \texttt{events} -- stocke les événements de sécurité (type,
     severite, payload JSON, tags JSON, etat d'enrichissement VT) ;
   \item \texttt{hash\_cache} -- cache des resultats VirusTotal pour
     eviter les appels API repetes.
@@ -163,11 +163,11 @@ class Agent(Base):
 % ------------------------------------------------------------------------------
 
 Le worker VirusTotal (\texttt{vt\_worker.py}) est un composant asynchrone
-qui enrichit les evenements avec des informations de reputation sur les
-fichiers suspects. Lorsqu'un evenement FIM contient un hash SHA256, le
+qui enrichit les événements avec des informations de reputation sur les
+fichiers suspects. Lorsqu'un événement FIM contient un hash SHA256, le
 worker interroge l'API publique de VirusTotal.
 
-Les appels sont limites a 4 requetes par minute via un \texttt{Semaphore}
+Les appels sont limites a 4 requêtes par minute via un \texttt{Semaphore}
 asyncio, ce qui respecte les quotas de l'API gratuite. Un cache local
 (\texttt{hash\_cache}) evite de interroger VirusTotal plusieurs fois pour
 le meme hash.
@@ -179,8 +179,8 @@ Le worker est active via les variables d'environnement
 \subsection{Integration GLPI}
 % ------------------------------------------------------------------------------
 
-L'integration avec GLPI (\texttt{glpi\_client.py}) permet de creer
-automatiquement un ticket GLPI pour chaque evenement de securite accepte
+L'intégration avec GLPI (\texttt{glpi\_client.py}) permet de creer
+automatiquement un ticket GLPI pour chaque événement de sécurité accepte
 par le serveur. Cette fonctionnalite est particulierement utile pour les
 equipes SOC qui utilisent GLPI comme outil de ticketing.
 
@@ -189,7 +189,7 @@ Le client utilise l'API REST v2 de GLPI avec authentification OAuth2
 suivantes :
 
 \begin{itemize}
-  \item \texttt{GLPI\_ENABLED} -- active ou desactive l'integration ;
+  \item \texttt{GLPI\_ENABLED} -- active ou desactive l'intégration ;
   \item \texttt{GLPI\_API\_URL} -- URL de l'API GLPI ;
   \item \texttt{GLPI\_OAUTH\_CLIENT\_ID} et
     \texttt{GLPI\_OAUTH\_CLIENT\_SECRET} -- identifiants OAuth2 ;
@@ -197,7 +197,7 @@ suivantes :
     credentials de l'API.
 \end{itemize}
 
-Le ticket cree resume l'evenement avec sa severite, son type, le hostname
+Le ticket cree resume l'événement avec sa severite, son type, le hostname
 concerne, et le hash du fichier suspect. Le demandeur du ticket est
 associe a l'utilisateur GLPI correspondant a l'email transmis par l'agent.
 
@@ -207,11 +207,11 @@ associe a l'utilisateur GLPI correspondant a l'email transmis par l'agent.
 
 Le serveur expose un endpoint \texttt{/metrics} compatible Prometheus.
 L'instrumentation est automatique via le package
-\texttt{prometheus\_fastapi\_instrumentator}, complete par des metriques
+\texttt{prometheus\_fastapi\_instrumentator}, complète par des métriques
 personnalisees definies dans \texttt{metrics.py} :
 
 \begin{itemize}
-  \item \texttt{edr\_events\_ingested\_total} -- compteur d'evenements
+  \item \texttt{edr\_events\_ingested\_total} -- compteur d'événements
     par type ;
   \item \texttt{edr\_agents\_registered\_total} -- total des heartbeats ;
   \item \texttt{edr\_active\_agents} -- nombre d'agents actifs (heartbeat
@@ -220,14 +220,14 @@ personnalisees definies dans \texttt{metrics.py} :
     (success/echoues) ;
   \item \texttt{edr\_auth\_failures\_total} -- tentatives
     d'authentification echouees ;
-  \item \texttt{edr\_fim\_events\_total} -- evenements FIM par action ;
-  \item \texttt{edr\_db\_health} -- etat de la base de donnees
+  \item \texttt{edr\_fim\_events\_total} -- événements FIM par action ;
+  \item \texttt{edr\_db\_health} -- etat de la base de données
     (1=sain, 0=degrade).
 \end{itemize}
 
 Un collecteur personnalise (\texttt{EDRDatabaseCollector}) interroge la
-base de donnees a chaque \emph{scrape} Prometheus pour exposer des
-jauges comme le nombre total d'evenements stockes, la repartition par
+base de données a chaque \emph{scrape} Prometheus pour exposer des
+jauges comme le nombre total d'événements stockes, la repartition par
 type et severite, et les statistiques du cache VT.
 
 % ------------------------------------------------------------------------------
@@ -235,12 +235,12 @@ type et severite, et les statistiques du cache VT.
 % ------------------------------------------------------------------------------
 
 Le serveur est containerise via un Dockerfile multi-etapes. L'image est
-publiee sur \texttt{ghcr.io/lockbits-esgi/edr:latest} avec support
+publiée sur \texttt{ghcr.io/lockbits-esgi/edr:latest} avec support
 multi-architecture (\texttt{linux/amd64} et \texttt{linux/arm64}).
 
-Le conteneur expose le port 8000 et integre un healthcheck HTTP sur
+Le conteneur expose le port 8000 et intégré un healthcheck HTTP sur
 \texttt{/health}. La configuration s'effectue entierement via des
-variables d'environnement, ce qui permet un deploiement sans fichier de
+variables d'environnement, ce qui permet un déploiement sans fichier de
 configuration.
 
 Un exemple d'execution autonome :
@@ -262,13 +262,13 @@ docker run -d \
 % ==============================================================================
 
 L'agent EDR est le composant installe sur les postes clients. Il collecte
-les informations de securite et les transmet au serveur central.
+les informations de sécurité et les transmet au serveur central.
 
 % ------------------------------------------------------------------------------
 \subsection{Architecture de l'agent}
 % ------------------------------------------------------------------------------
 
-L'agent est ecrit en \textbf{Python 3.12} et compile en binaire autonome
+L'agent est écrit en \textbf{Python 3.12} et compile en binaire autonome
 avec \textbf{PyInstaller}. Cette approche evite toute dependance
 d'execution sur la machine cible.
 
@@ -280,7 +280,7 @@ L'architecture est composee de quatre modules :
   \item \texttt{agent/heartbeat.py} -- thread d'arriere-plan pour les
     heartbeats periodiques ;
   \item \texttt{agent/sender.py} -- client HTTP avec file d'attente
-    locale pour la transmission fiable des evenements ;
+    locale pour la transmission fiable des événements ;
   \item \texttt{agent/fim.py} -- surveillance des modifications de
     fichiers (File Integrity Monitoring).
 \end{itemize}
@@ -326,29 +326,29 @@ class MiniEDRAgent:
 \subsection{Fonctionnalites}
 % ------------------------------------------------------------------------------
 
-\paragraph{Mode scan.} Effectue un instantane ponctuel du systeme :
-processus en cours (PID, nom, CPU, RAM), connexions reseau actives,
-utilisateurs connectes, et informations systeme (OS, noyau, uptime).
-Les donnees sont envoyees au serveur sous forme d'evenement de type
+\paragraph{Mode scan.} Effectue un instantane ponctuel du système :
+processus en cours (PID, nom, CPU, RAM), connexions réseau actives,
+utilisateurs connectés, et informations système (OS, noyau, uptime).
+Les données sont envoyees au serveur sous forme d'événement de type
 \texttt{scan}.
 
 \paragraph{Mode monitor.} Surveillance continue avec heartbeat periodique
 (toutes les 5 minutes par defaut) et analyse FIM en temps reel.
-L'agent surveille les repertoires configures et genere des evenements
+L'agent surveille les repertoires configures et genere des événements
 \texttt{fim} lors de creations, modifications, suppressions ou
-deplacements de fichiers. Un instantane systeme est egalement envoye a
+deplacements de fichiers. Un instantane système est egalement envoye a
 intervalles reguliers (toutes les 10 minutes par defaut).
 
-\paragraph{FIM (File Integrity Monitoring).} La detection des
+\paragraph{FIM (File Integrity Monitoring).} La détection des
 modifications de fichiers repose sur la bibliotheque \texttt{watchdog}.
 Lorsqu'un fichier est cree ou modifie dans un repertoire surveille,
-l'agent calcule son empreinte SHA256 et l'inclut dans l'evenement. Les
+l'agent calcule son empreinte SHA256 et l'inclut dans l'événement. Les
 fichiers executables (.exe, .dll, .bat, .ps1, .sh) et les chemins
 sensibles (/tmp/, /var/tmp/, startup) sont marques comme suspects.
 
 \paragraph{Transmission fiable.} Le module \texttt{sender.py} implemente
 un mecanisme de resilience : en cas d'indisponibilite du serveur, les
-evenements sont mis en file d'attente locale au format JSONL et
+événements sont mis en file d'attente locale au format JSONL et
 retransmis automatiquement lors du prochain \emph{flush}.
 
 % ------------------------------------------------------------------------------
@@ -367,15 +367,15 @@ a chaque plateforme :
     Windows.
 \end{itemize}
 
-Les binaires sont distribues via les GitHub Releases du depot principal.
+Les binaires sont distribues via les GitHub Releases du dépôt principal.
 Chaque push sur \texttt{main} declenche la CI qui compile les binaires
 et met a jour les releases.
 
 % ------------------------------------------------------------------------------
-\subsection{Deploiement}
+\subsection{Déploiement}
 % ------------------------------------------------------------------------------
 
-Le deploiement de l'agent s'effectue via le script
+Le déploiement de l'agent s'effectue via le script
 \texttt{install-agent.sh} qui supporte deux modes :
 
 \begin{itemize}
@@ -395,7 +395,7 @@ curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-age
 \end{lstlisting}
 
 L'agent supporte les commandes \texttt{--update} (mise a jour automatique)
-et \texttt{--uninstall} (desinstallation complete).
+et \texttt{--uninstall} (desinstallation complète).
 
 
 % ==============================================================================
@@ -403,14 +403,14 @@ et \texttt{--uninstall} (desinstallation complete).
 % ==============================================================================
 
 Le site client LockBits est l'interface web qui permet aux clients de
-visualiser leur tableau de bord, gerer leurs tickets de support, et
+visualiser leur tableau de bord, gèrer leurs tickets de support, et
 installer l'agent EDR.
 
 % ------------------------------------------------------------------------------
 \subsection{Architecture du site}
 % ------------------------------------------------------------------------------
 
-Le site est developpe en \textbf{PHP 8+} avec \textbf{Apache} comme
+Le site est développé en \textbf{PHP 8+} avec \textbf{Apache} comme
 serveur web. Il suit une architecture modulaire dans le repertoire
 \texttt{site\_lockbits/client/} :
 
@@ -418,20 +418,20 @@ serveur web. Il suit une architecture modulaire dans le repertoire
   \item \texttt{auth.php} -- gestion des sessions et authentification ;
   \item \texttt{login.php}, \texttt{register.php} -- pages
     d'authentification ;
-  \item \texttt{dashboard.php} -- tableau de bord client avec metriques
+  \item \texttt{dashboard.php} -- tableau de bord client avec métriques
     EDR et commande d'installation de l'agent ;
   \item \texttt{tickets.php}, \texttt{ticket.php},
     \texttt{create\_ticket.php} -- gestion des tickets de support ;
   \item \texttt{chat\_client.php} -- interface du chatbot ;
   \item \texttt{config.php} -- configuration centralisee ;
-  \item \texttt{db.php} -- connexion a la base de donnees via PDO.
+  \item \texttt{db.php} -- connexion a la base de données via PDO.
 \end{itemize}
 
 % ------------------------------------------------------------------------------
 \subsection{Modules fonctionnels}
 % ------------------------------------------------------------------------------
 
-\paragraph{Authentification.} Le module \texttt{auth.php} gere les
+\paragraph{Authentification.} Le module \texttt{auth.php} gère les
 sessions PHP securisees avec regeneration d'ID, cookie
 \texttt{httponly} et \texttt{samesite=Lax}. Les mots de passe sont
 haches avec les algorithmes natifs de PHP.
@@ -460,7 +460,7 @@ function db(): PDO
 
 \paragraph{Dashboard.} Le tableau de bord affiche des cartes de
 statistiques (statut du service, uptime 30 jours, tickets ouverts, score
-de securite) ainsi que la section de deploiement de l'agent EDR avec la
+de sécurité) ainsi que la section de déploiement de l'agent EDR avec la
 commande d'installation pre-remplie. L'interface est construite avec
 Tailwind CSS et du JavaScript vanilla.
 
@@ -469,14 +469,14 @@ leurs tickets de support. Les tickets sont synchronises avec GLPI pour
 assurer la coherence entre le portail client et l'outil interne.
 
 % ------------------------------------------------------------------------------
-\subsection{Base de donnees MySQL}
+\subsection{Base de données MySQL}
 % ------------------------------------------------------------------------------
 
-La base de donnees MySQL du site client contient les tables suivantes,
+La base de données MySQL du site client contient les tables suivantes,
 definies dans \texttt{client/database.sql} :
 
 \begin{itemize}
-  \item \texttt{users} -- comptes clients avec reference vers GLPI
+  \item \texttt{users} -- comptes clients avec référence vers GLPI
     (\texttt{glpi\_user\_id}) ;
   \item \texttt{tickets} -- tickets de support relies aux utilisateurs
     et a GLPI (\texttt{glpi\_ticket\_id}) ;
@@ -485,14 +485,14 @@ definies dans \texttt{client/database.sql} :
   \item \texttt{edr\_endpoints} -- terminaux enregistres par organisation ;
   \item \texttt{edr\_reports} -- rapports EDR recus ;
   \item \texttt{edr\_report\_processes} -- processus collectes ;
-  \item \texttt{edr\_report\_system} -- informations systeme.
+  \item \texttt{edr\_report\_system} -- informations système.
 \end{itemize}
 
 % ------------------------------------------------------------------------------
 \subsection{Integration GLPI SSO}
 % ------------------------------------------------------------------------------
 
-L'integration GLPI (\texttt{glpi\_api.php}) permet l'authentification
+L'intégration GLPI (\texttt{glpi\_api.php}) permet l'authentification
 unique (SSO) et la synchronisation des tickets. Elle supporte deux modes
 de communication avec GLPI :
 
@@ -513,20 +513,20 @@ des tickets d'un utilisateur via l'API v2.
 % ------------------------------------------------------------------------------
 
 L'image Docker du site client (\texttt{site\_lockbits/Dockerfile}) est
-basee sur \texttt{php:8.2-apache}. Elle integre :
+basee sur \texttt{php:8.2-apache}. Elle intégré :
 
 \begin{itemize}
-  \item Les extensions PHP necessaires (mysqli, pdo\_mysql, curl, gd,
+  \item Les extensions PHP nécessaires (mysqli, pdo\_mysql, curl, gd,
     zip, opcache) ;
   \item Le module Apache \texttt{rewrite} pour les URLs propres ;
   \item Le rate limiting Apache (200 req/min, burst de 50) ;
   \item Un script d'entree (\texttt{docker-entrypoint.sh}) qui
-    initialise le schema de base de donnees au premier demarrage ;
+    initialise le schéma de base de données au premier démarrage ;
   \item Un healthcheck HTTP sur la page d'accueil.
 \end{itemize}
 
-L'image est publiee sur \texttt{ghcr.io/lockbits-esgi/site\_lockbits:latest}.
-Le deploiement en production necessite un conteneur MySQL separe (image
+L'image est publiée sur \texttt{ghcr.io/lockbits-esgi/site\_lockbits:latest}.
+Le déploiement en production necessite un conteneur MySQL sépare (image
 \texttt{mysql:8.0}), comme defini dans le fichier
 \texttt{docker-compose.prod.yml}.
 
@@ -547,7 +547,7 @@ Le chatbot est implemente dans un fichier PHP unique
 (\texttt{site\_lockbits/chat.php}) qui sert de proxy entre le front-end
 JavaScript et l'API Anthropic.
 
-L'endpoint attend une requete POST avec un corps JSON contenant le
+L'endpoint attend une requête POST avec un corps JSON contenant le
 message de l'utilisateur et l'historique de la conversation. Il construit
 un payload et l'envoie a l'API Claude :
 
@@ -584,8 +584,8 @@ L'assistant virtuel est capable de :
   \item Fournir un resume du tableau de bord client (tentatives DDoS
     bloquees, vulnerabilites, incidents) ;
   \item Conserver l'historique de la conversation entre chaque message ;
-  \item S'adapter a la langue du client (francais par defaut, anglais
-    si necessaire).
+  \item S'adapter a la langue du client (français par defaut, anglais
+    si nécessaire).
 \end{itemize}
 
 Le \texttt{system prompt} contient les informations essentielles sur
@@ -593,21 +593,21 @@ l'entreprise : SLA de 99,99\%, monitoring SOC 24/7/365, temps de reponse
 aux incidents inferieur a 5 minutes, certification ISO 27001 Ready.
 
 % ------------------------------------------------------------------------------
-\subsection{Securite}
+\subsection{Sécurité}
 % ------------------------------------------------------------------------------
 
-Plusieurs mesures de securite encadrent le chatbot :
+Plusieurs mesures de sécurité encadrent le chatbot :
 
 \begin{itemize}
   \item \textbf{Rate limiting} -- compteur quotidien base sur un fichier
-    \texttt{usage\_count.txt} qui limite a 100 requetes par jour toutes
+    \texttt{usage\_count.txt} qui limite a 100 requêtes par jour toutes
     sources confondues. Le compteur est reinitialise chaque jour ;
-  \item \textbf{Validation des entrees} -- la methode POST est obligatoire,
+  \item \textbf{Validation des entrees} -- la méthode POST est obligatoire,
     et le message est verifie avant traitement ;
   \item \textbf{Cle API} -- la cle d'API Claude est chargee depuis la
-    variable d'environnement \texttt{CLAUDE\_API\_KEY}, jamais exposee
+    variable d'environnement \texttt{CLAUDE\_API\_KEY}, jamais exposée
     dans le code source ;
-  \item \textbf{Perimetre restreint} -- le prompt systeme interdit au
+  \item \textbf{Perimetre restreint} -- le prompt système interdit au
     chatbot de repondre a des questions hors du domaine de LockBits et
     de la cybersecurite.
 \end{itemize}

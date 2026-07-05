@@ -1,6 +1,6 @@
 % ==============================================================================
 % Chapitre 5 : Gouvernance et Gestion de Projet
-% Organisation equipe, methodologie, risques, plan de deploiement, jalons
+% Organisation equipe, methodologie, risques, plan de déploiement, jalons
 % ==============================================================================
 
 \chapter{Gouvernance et Gestion de Projet}
@@ -8,7 +8,7 @@
 \section{Organisation de l'\'equipe}
 
 L'\'equipe du projet LockBits est compos\'ee de quatre \'etudiants de
-l'\textbf{ESGI}, chacun occupant un r\^ole sp\'ecifique qui refl\`ete \`a
+l'\textbf{ESGI}, chacun occupant un r\^ole sp\'ecifique qui refl\`été \`a
 la fois les comp\'etences individuelles et les besoins du projet. La
 r\'epartition des responsabilit\'es suit une logique de compl\'ementarit\'e~:
 les domaines techniques sont attribu\'es selon l'expertise de chacun,
@@ -17,20 +17,20 @@ confi\'ees \`a un membre unique pour garantir la coh\'erence de
 l'ensemble.
 
 Cette organisation vise \`a maximiser l'autonomie de chaque d\'eveloppeur
-sur son p\'erim\`etre tout en maintenant une vision d'ensemble partag\'ee
+sur son p\'erim\`être tout en maintenant une vision d'ensemble partag\'ee
 par l'\'equipe. Les choix architecturaux et les points de convergence
 entre les composants sont discut\'es coll\'egialement lors des r\'eunions
 hebdomadaires.
 
 \subsection{R\^oles et responsabilit\'es}
 
-Le tableau~\ref{tab:roles} pr\'esente la r\'epartition des r\^oles au
+Le tableau~\ref{tab:rôles} pr\'esente la r\'epartition des r\^oles au
 sein de l'\'equipe.
 
 \begin{table}[h]
   \centering
   \caption{R\'epartition des r\^oles et responsabilit\'es}
-  \label{tab:roles}
+  \label{tab:rôles}
   \begin{tabular}{@{}llp{7cm}@{}}
     \toprule
     \textbf{R\^ole} & \textbf{Personne} & \textbf{Responsabilit\'es} \\
@@ -61,7 +61,7 @@ et de fichiers sp\'ecifiques, d\'efinis dans les d\'ep\^ots Git
 correspondants.
 
 \textbf{Cl\'ery A.-Ferradou}~: Chef de Projet et DevOps, il assure la
-coh\'erence de l'infrastructure. Son p\'erim\`etre couvre
+coh\'erence de l'infrastructure. Son p\'erim\`être couvre
 l'orchestration Docker (fichiers \texttt{docker-compose.yml},
 \texttt{Dockerfiles}), la pipeline CI/CD (fichier
 \texttt{build-and-push.yml} GitHub Actions), le monitoring
@@ -147,7 +147,7 @@ l'ensemble des besoins du projet.
     le code source, les issues, les pull requests, les discussions de
     code review et le tableau de bord de projet (GitHub Projects).
   \item \textbf{Discord}~: outil de communication quotidienne pour les
-    \'echanges rapides, le partage d'\'ecran et l'organisation
+    \'echanges rapides, le partage d'\'écran et l'organisation
     informelle.
   \item \textbf{Git}~: gestion de versions d\'ecentralis\'ee avec un
     workflow trunk-based. Les branches de fonctionnalit\'es sont
@@ -155,7 +155,7 @@ l'ensemble des besoins du projet.
     validation via pull request.
   \item \textbf{Code review syst\'ematique}~: toute modification est
     soumise \`a une revue par au moins un autre membre de l'\'equipe
-    avant d'\^etre int\'egr\'ee. Cette pratique garantit la qualit\'e
+    avant d'\^être int\'egr\'ee. Cette pratique garantit la qualit\'e
     du code et la diffusion des connaissances.
 \end{itemize}
 
@@ -226,7 +226,7 @@ Cette phase est consacr\'ee au d\'eveloppement du c\^ocur du produit
 EDR. Le serveur FastAPI est d\'evelopp\'e avec son API REST et sa base
 SQLite. L'agent Python est cr\'e\'e avec les fonctionnalit\'es de scan,
 de monitoring et de FIM. L'int\'egration VirusTotal est mise en place,
-et les premiers tests unitaires sont \'ecrits.
+et les premiers tests unitaires sont \'écrits.
 
 \subsection{Phase 2~: Site client (Semaines 7--10)}
 
@@ -273,11 +273,11 @@ suivants sont atteints~:
   \item \textbf{Chatbot op\'erationnel} int\'egr\'e au site avec rate
     limiting fonctionnel.
   \item \textbf{Pipeline CI/CD verte} ex\'ecutant l'encha\^inement
-    complet~: lint, test, build, push.
+    complète~: lint, test, build, push.
   \item \textbf{Installation en une commande} via le script
     \texttt{install.sh} utilisant \texttt{curl}.
 \end{enumerate}
 
 Ces crit\`eres garantissent que la solution est utilisable en
-condition r\'eelle et peut \^etre d\'eploy\'ee par un client sans
+condition r\'eelle et peut \^être d\'eploy\'ee par un client sans
 intervention de l'\'equipe de d\'eveloppement.
