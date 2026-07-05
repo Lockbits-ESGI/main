@@ -11,7 +11,7 @@
 
 Ce dossier d'architecture s'inscrit dans le cadre du projet annuel de
 2\textsuperscript{e} année à l'\textbf{ESGI} (École Supérieure de Génie
-Informatique) de Paris. Le projet fil rouge se déroule sur l'année
+Informatique) de Toulouse. Le projet fil rouge se déroule sur l'année
 2025--2026 et constitue la principale évaluation pratique du cursus. Il
 réunit une équipe de quatre étudiants dont la mission est de réaliser un
 projet informatique complet, de la phase de conception jusqu'au
@@ -29,15 +29,14 @@ qualité, de sécurité et de maintenabilité.
 \textbf{LockBits} est une entreprise fictive de cybersécurité créée dans
 le cadre de ce projet. Elle propose une solution \textbf{EDR} (Endpoint
 Detection \& Response) open-source, associée à un portail client pour la
-gestion des abonnés.
+gestion des clients.
 
 La solution EDR permet aux entreprises de détecter les menaces sur leurs
 postes de travail (endpoints) et d'y répondre de manière orchestrée.
 Elle se compose de deux éléments principaux~: d'une part un serveur
 central qui collecte et analyse les données de sécurité, d'autre part un
-agent déployé sur chaque machine à protéger. Le portail client complète
-l'offre en offrant une interface web de gestion, de visualisation et de
-support.
+agent déployé sur chaque machine à protéger. Le portail client est un composant essentiel de la solution, permettant
+aux clients de gérer leur sécurité en temps réel.
 
 LockBits se positionne comme une alternative open-source aux solutions
 EDR propriétaires du marché. Le choix de l'open-source permet à la fois
@@ -62,10 +61,11 @@ mesures de protection strictes, tant au niveau du transport que du
 stockage. La solution doit respecter les principes de moindre
 privilège et de défense en profondeur.
 
-Sur le plan de la disponibilité, le service EDR est critique pour les
-clients. Une interruption de la détection expose l'entreprise à des
-risques de sécurité. Le système doit donc être résilient et permettre
-des mises à jour sans interruption de service.
+Sur le plan de la disponibilité, l'ensemble de l'application est
+critique pour les clients. Le portail client et GLPI doivent
+fonctionner pour que les clients reçoivent les alertes de sécurité.
+Le système doit donc être résilient et permettre des mises à jour
+sans interruption de service.
 
 \section{Objectifs du projet}
 
@@ -84,7 +84,7 @@ Le projet LockBits poursuit sept objectifs techniques principaux~:
     événements de modification de fichiers (FIM).
   \item \textbf{Site client web}~: réaliser un portail client en
     PHP/Apache avec authentification, tableau de bord, gestion des
-    abonnés et système de tickets de support.
+    clients et système de tickets de support.
   \item \textbf{Chatbot intelligent}~: intégrer un assistant virtuel au
     site client, alimenté par l'API Claude d'Anthropic, pour répondre
     aux questions courantes des utilisateurs.
@@ -104,13 +104,13 @@ Le projet LockBits poursuit sept objectifs techniques principaux~:
 Au-delà des objectifs techniques, le projet vise des objectifs
 pédagogiques précis. Les étudiants doivent mettre en pratique les
 compétences acquises durant leur formation~: développement logiciel,
-conception d'architecture, administration système et gestion de bases de
-données.
+conception d'architecture, administration système, sécurité
+informatique et gestion de bases de données.
 
 La gestion de projet occupe une place centrale. L'équipe doit organiser
-son travail, répartir les tâches, tenir des réunions hebdomadaires et
-respecter des sprints de deux semaines. Cette organisation reproduit les
-méthodes agiles utilisées en entreprise.
+son travail, répartir les tâches et tenir des réunions hebdomadaires.
+Cette organisation reproduit les méthodes agiles utilisées en
+entreprise, sans suivre de sprints formels.
 
 Le projet introduit également les outils \textbf{DevOps} modernes~:
 Docker pour la conteneurisation, GitHub Actions pour l'intégration
@@ -158,12 +158,15 @@ La stack technique est imposée par le cahier des charges du projet~:
   \item \textbf{Site client}~: PHP 8+ avec Apache, base de données MySQL
     8.0.
   \item \textbf{Conteneurisation}~: Docker avec Docker Compose pour
-    l'orchestration des services.
+    l'orchestration des services, chaque composant possédant son propre
+    \texttt{Dockerfile}.
   \item \textbf{CI/CD}~: GitHub Actions pour l'automatisation des
     pipelines, GitHub Container Registry (GHCR) pour le stockage des
     images.
   \item \textbf{Déploiement}~: Docker Compose en production, avec
-    Dokploy comme plateforme d'hébergement.
+    Dokploy comme plateforme d'hébergement. La branche \texttt{develop}
+    est déployée en pré-production et la branche \texttt{main} en
+    production.
   \item \textbf{Architecture matérielle}~: support des architectures
     \texttt{linux/amd64} et \texttt{linux/arm64}.
 \end{itemize}
@@ -172,13 +175,13 @@ La stack technique est imposée par le cahier des charges du projet~:
 
 L'équipe est composée de quatre étudiants, ce qui impose une répartition
 claire des responsabilités. Le projet se déroule sur environ huit mois,
-de septembre à avril. Les composants sont développés en parallèle via
+de septembre à juillet. Les composants sont développés en parallèle via
 des sous-modules Git, chaque sous-module étant un dépôt indépendant avec
 son propre cycle de développement.
 
-Le travail est organisé en sprints de deux semaines, avec des réunions
-hebdomadaires de suivi. Cette organisation permet de détecter
-rapidement les blocages et d'ajuster les priorités.
+Le travail est organisé avec des réunions hebdomadaires de suivi, sans
+sprints formels. Cette organisation permet de détecter rapidement les
+blocages et d'ajuster les priorités.
 
 \section{Méthodologie et approche}
 

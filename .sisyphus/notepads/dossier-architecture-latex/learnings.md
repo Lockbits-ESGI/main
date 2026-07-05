@@ -48,3 +48,30 @@
   - Utilise `\texttt{}` pour les endpoints API, noms de fichiers, variables d'environnement
   - `\oe{}` pour le caractère œ dans "cœur"
   - Environ 6-8 pages estimées
+
+## Corrections appliquées (2026-07-05)
+- **preamble.tex** : Ajouté `extendedchars=true` dans `\lstset` pour meilleur support des accents avec pdflatex. T1 fontenc et literate étaient déjà présents.
+- **01-introduction.tex** : 
+  - ESGI Paris → Toulouse
+  - "abonnés" → "clients" (2 occurrences)
+  - Reformulation portail client (complète l'offre → composant essentiel)
+  - Reformulation disponibilité (EDR seul → ensemble app critique)
+  - Ajout "sécurité informatique" compétences pédagogiques
+  - Suppression sprints formels (2 mentions)
+  - Ajout Dockerfile dans contraintes techniques
+  - Ajout déploiement branche develop→preprod, main→prod
+  - "avril" → "juillet"
+- **02-architecture-globale.tex** : 
+  - Ajout `\\[2pt]` après chaque titre de couche dans description
+  - SQLite → PostgreSQL dans description couche données
+  - Figure 2.1 : scale=0.8, node distance=2.5cm and 3.5cm
+  - Reformulation interactions site web (basé tickets GLPI, pas dashboard)
+  - Reformulation chatbot (voit discussion ticket GLPI)
+  - Table 2.1 : SQLite → PostgreSQL
+  - Figure 2.2 : scale=0.85, node distance=2.5cm and 3.5cm
+  - K8s reformulé (écarté, pas dans roadmap)
+  - GitHub Actions : "pre-construites" → "homemade"
+  - GHCR : "images privées" → "publiques", scan reformulé
+  - Tests pénétration → mode conditionnel
+- **03-composants-applicatifs.tex** : PostgreSQL devient primaire, SQLite devient secondaire (swap)
+- **04-infrastructure-deploiement.tex** : Ajout "homemade (fait maison)" dans description pipeline CI
