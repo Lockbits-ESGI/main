@@ -1,6 +1,6 @@
 % ==============================================================================
-% Chapitre 4 : Infrastructure et Deploiement
-% Docker, CI/CD, scripts, monitoring, securite
+% Chapitre 4 : Infrastructure et Déploiement
+% Docker, CI/CD, scripts, monitoring, sécurité
 % ==============================================================================
 
 \chapter{Infrastructure et Déploiement}
@@ -159,10 +159,10 @@ L'infrastructure réseau est segmentée en trois réseaux bridge distincts,
 chacun avec un niveau d'exposition différent~:
 
 \begin{itemize}
-  \item \textbf{Réseau \texttt{frontend}}~: exposé sur l'hôte, il connecte le
+  \item \textbf{Réseau \texttt{frontend}}~: exposé sur l'hôte, il connecté le
     serveur EDR et le site web. Seuls ces deux services sont accessibles
     depuis l'extérieur via les ports publiés.
-  \item \textbf{Réseau \texttt{backend}}~: réseau interne qui connecte le
+  \item \textbf{Réseau \texttt{backend}}~: réseau interne qui connecté le
     serveur EDR à sa base de données PostgreSQL. Aucun port n'est exposé sur
     l'hôte pour ce réseau.
   \item \textbf{Réseau \texttt{monitoring}}~: réseau interne dédié aux
