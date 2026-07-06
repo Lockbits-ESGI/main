@@ -17,7 +17,7 @@ confi\'ees \`a un membre unique pour garantir la coh\'erence de
 l'ensemble.
 
 Cette organisation vise \`a maximiser l'autonomie de chaque d\'eveloppeur
-sur son p\'erim\`être tout en maintenant une vision d'ensemble partag\'ee
+sur son p\'erim\`etre tout en maintenant une vision d'ensemble partag\'ee
 par l'\'equipe. Les choix architecturaux et les points de convergence
 entre les composants sont discut\'es coll\'egialement lors des r\'eunions
 hebdomadaires.
@@ -38,7 +38,7 @@ sein de l'\'equipe.
     Chef de Projet / DevOps
       & Cl\'ery A.-Ferradou
       & Coordination \'equipe, CI/CD, Docker, monitoring,
-        scripts d\'eploiement, gestion des risques \\
+        GitOps, \'eploiement, gestion des risques \\
     D\'eveloppeur EDR
       & Swann Kechar
       & Serveur FastAPI, agent Python, FIM, int\'egration
@@ -61,15 +61,15 @@ et de fichiers sp\'ecifiques, d\'efinis dans les d\'ep\^ots Git
 correspondants.
 
 \textbf{Cl\'ery A.-Ferradou}~: Chef de Projet et DevOps, il assure la
-coh\'erence de l'infrastructure. Son p\'erim\`être couvre
+coh\'erence de l'infrastructure. Son p\'erim\`etre couvre
 l'orchestration Docker (fichiers \texttt{docker-compose.yml},
 \texttt{Dockerfiles}), la pipeline CI/CD (fichier
 \texttt{build-and-push.yml} GitHub Actions), le monitoring
 (Prometheus, Grafana, Loki) et les scripts de d\'eploiement
 (\texttt{install.sh}, \texttt{backup.sh}). Il coordonne \'egalement
-les sprints et la gestion des risques.
+les phases de d\'eveloppement et la gestion des risques.
 
-\textbf{Swann Kechar}~: D\'eveloppeur EDR, il travaille sur le c\^ocur
+\textbf{Swann Kechar}~: D\'eveloppeur EDR, il travaille sur le cœur
 du produit. Il est responsable du serveur FastAPI (dossier
 \texttt{edr/server/}), de l'agent Python (dossier \texttt{edr/agent/}),
 de la surveillance des fichiers (FIM), de l'int\'egration avec
@@ -87,54 +87,44 @@ d'Anthropic et le m\'ecanisme de rate limiting.
 
 \section{M\'ethodologie de travail}
 
-\subsection{Approche Agile adapt\'ee}
+\subsection{Points hebdomadaires}
 
-L'\'equipe a adopt\'e une m\'ethodologie Agile adapt\'ee au contexte
-acad\'emique et \`a la taille r\'eduite de l'\'equipe. Le cadre de
-travail s'inspire de \textbf{Scrum} sans en appliquer tous les
-artefacts, afin de rester l\'eger et efficace.
+L'\'equipe a adopt\'e une organisation l\'eg\`ere adapt\'ee au contexte
+acad\'emique et \`a la taille r\'eduite de l'\'equipe. Plut\^ot qu'un
+cadre Agile formel, le suivi repose sur des \textbf{r\'eunions
+hebdomadaires} de coordination.
 
-Les \'el\'ements cl\'es de cette m\'ethodologie sont~:
+Chaque semaine, l'\'equipe se retrouve pour un point o\`u chaque membre
+pr\'esente~:
 
 \begin{itemize}
-  \item \textbf{Sprints de deux semaines}~: chaque sprint produit un
-    incr\'ement fonctionnel du produit. La dur\'ee de deux semaines
-    offre un \'equilibre entre la charge de planification et la
-    visibilit\'e sur l'avancement.
-  \item \textbf{Daily standups trois fois par semaine}~: les lundis,
-    mercredis et vendredis, l'\'equipe se retrouve pour un point de 15
-    minutes sur l'avancement et les blocages \'eventuels. Ce rythme
-    permet de maintenir une dynamique sans alourdir l'emploi du temps.
-  \item \textbf{Sprint review en fin de sprint}~: \`a l'issue de chaque
-    sprint, l'\'equipe pr\'esente les fonctionnalit\'es livr\'ees et
-    recueille les retours.
-  \item \textbf{R\'etrospective}~: la r\'etrospective conclut chaque
-    sprint en identifiant les axes d'am\'elioration du fonctionnement
-    de l'\'equipe.
-  \item \textbf{Backlog g\'er\'e via GitHub Projects}~: les t\^aches
-    sont prioris\'ees et suivies dans un tableau Kanban int\'egr\'e \`a
-    GitHub, offrant une visibilit\'e partag\'ee sur l'avancement.
+  \item Les t\^aches r\'ealis\'ees depuis la derni\`ere r\'eunion~;
+  \item Les \'el\'ements bloquants \'eventuels~;
+  \item Les travaux en cours~;
+  \item Les prochaines \'etapes pr\'evues.
 \end{itemize}
+
+Ce format l\'eg-er permet de maintenir une dynamique d'\'equipe sans
+alourdir l'emploi du temps, tout en assurant une visibilit\'e partag\'ee
+sur l'avancement de chacun. Les t\^aches sont suivies dans un tableau
+Kanban GitHub Projects, offrant une vue d'ensemble accessible \`a tout
+moment.
 
 \subsection{Rituels}
 
-Les rituels de l'\'equipe sont organis\'es selon un calendrier
-pr\'evisible qui structure la vie du projet.
+Les rituels de l'\'equipe sont organis\'es autour des r\'eunions
+hebdomadaires qui structurent la vie du projet.
 
 \begin{description}
-  \item[Daily]~: point de 15 minutes, trois fois par semaine. Chaque
-    membre r\'epond \`a trois questions~: qu'ai-je fait depuis le
-    dernier daily~? que vais-je faire aujourd'hui~? quels sont mes
-    blocages~?
-  \item[Sprint planning]~: r\'eunion en d\'ebut de sprint pour
-    d\'efinir les objectifs, s\'electionner les t\^aches du backlog et
-    les affecter aux membres de l'\'equipe.
-  \item[Sprint review]~: d\'emonstration des fonctionnalit\'es
-    livr\'ees, suivie d'une discussion sur les \'ecarts \'eventuels
-    entre les objectifs planifi\'es et le r\'ealis\'e.
-  \item[R\'etrospective]~: moment d'\'echange sur le d\'eroulement du
-    sprint, visant \`a am\'eliorer en continu les pratiques de
-    l'\'equipe.
+  \item[R\'eunion hebdomadaire]~: point de coordination d'environ 15 \`a
+    30 minutes. Chaque membre pr\'esente tour \`a tour ses r\'ealisations,
+    ses blocages, ses travaux en cours et ses prochaines \'etapes.
+  \item[Revue des blocages]~: \`a chaque r\'eunion, les \'el\'ements
+    bloquants sont identifi\'es et des solutions sont propos\'ees
+    collectivement.
+  \item[Validation des livraisons]~: \`a l'issue de chaque phase
+    significative, l'\'equipe valide les fonctionnalit\'es livr\'ees
+    avant de passer \`a la phase suivante.
 \end{description}
 
 \subsection{Outils collaboratifs}
@@ -146,8 +136,10 @@ l'ensemble des besoins du projet.
   \item \textbf{GitHub}~: plateforme centrale du projet. Elle h\'eberge
     le code source, les issues, les pull requests, les discussions de
     code review et le tableau de bord de projet (GitHub Projects).
+  \item \textbf{Jira}~: outil compl\'ementaire de suivi de projet pour
+    la planification des t\^aches et le reporting d'avancement.
   \item \textbf{Discord}~: outil de communication quotidienne pour les
-    \'echanges rapides, le partage d'\'écran et l'organisation
+    \'echanges rapides, le partage d'\'ecran et l'organisation
     informelle.
   \item \textbf{Git}~: gestion de versions d\'ecentralis\'ee avec un
     workflow trunk-based. Les branches de fonctionnalit\'es sont
@@ -155,7 +147,7 @@ l'ensemble des besoins du projet.
     validation via pull request.
   \item \textbf{Code review syst\'ematique}~: toute modification est
     soumise \`a une revue par au moins un autre membre de l'\'equipe
-    avant d'\^être int\'egr\'ee. Cette pratique garantit la qualit\'e
+    avant d'\^etre int\'egr\'ee. Cette pratique garantit la qualit\'e
     du code et la diffusion des connaissances.
 \end{itemize}
 
@@ -170,7 +162,7 @@ mitigation. Le tableau~\ref{tab:risques} r\'esume cette analyse.
   \centering
   \caption{Analyse des risques du projet}
   \label{tab:risques}
-  \begin{tabular}{@{}lccc@{}}
+  \begin{tabularx}{\textwidth}{@{}l c c X@{}}
     \toprule
     \textbf{Risque}
       & \textbf{Prob.}
@@ -198,7 +190,7 @@ mitigation. Le tableau~\ref{tab:risques} r\'esume cette analyse.
       & Moyen
       & Documentation, POCs, pair programming \\
     \bottomrule
-  \end{tabular}
+  \end{tabularx}
 \end{table}
 
 Chaque risque fait l'objet d'un suivi r\'egulier pendant les sprints.
@@ -279,5 +271,5 @@ suivants sont atteints~:
 \end{enumerate}
 
 Ces crit\`eres garantissent que la solution est utilisable en
-condition r\'eelle et peut \^être d\'eploy\'ee par un client sans
+condition r\'eelle et peut \^etre d\'eploy\'ee par un client sans
 intervention de l'\'equipe de d\'eveloppement.
