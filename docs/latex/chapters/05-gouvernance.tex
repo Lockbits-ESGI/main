@@ -35,10 +35,13 @@ sein de l'\'equipe.
     \toprule
     \textbf{R\^ole} & \textbf{Personne} & \textbf{Responsabilit\'es} \\
     \midrule
-    Chef de Projet / DevOps
+    Chef de Projet / DevOps / H\'ebergeur
       & Cl\'ery A.-Ferradou
-      & Coordination \'equipe, CI/CD, Docker, monitoring,
-        GitOps, \'eploiement, gestion des risques \\
+      & Coordination \'equipe, infrastructure Proxmox,
+        h\'ebergement LXC (Dokploy, cloudflared),
+        CI/CD, Docker, monitoring, GitOps,
+        d\'eploiement, Cloudflare Zero Trust,
+        gestion des risques \\
     D\'eveloppeur EDR
       & Swann Kechar
       & Serveur FastAPI, agent Python, FIM, int\'egration
@@ -60,13 +63,18 @@ Chaque membre de l'\'equipe est responsable d'un ensemble de composants
 et de fichiers sp\'ecifiques, d\'efinis dans les d\'ep\^ots Git
 correspondants.
 
-\textbf{Cl\'ery A.-Ferradou}~: Chef de Projet et DevOps, il assure la
-coh\'erence de l'infrastructure. Son p\'erim\`etre couvre
+\textbf{Cl\'ery A.-Ferradou}~: Chef de Projet, DevOps et H\'ebergeur, il assure la
+coh\'erence de l'infrastructure. Il g\`ere un serveur Proxmox personnel
+qui h\'eberge l'ensemble des conteneurs LXC du projet. Son p\'erim\`etre couvre
 l'orchestration Docker (fichiers \texttt{docker-compose.yml},
 \texttt{Dockerfiles}), la pipeline CI/CD (fichier
 \texttt{build-and-push.yml} GitHub Actions), le monitoring
 (Prometheus, Grafana, Loki) et les scripts de d\'eploiement
-(\texttt{install.sh}, \texttt{backup.sh}). Il coordonne \'egalement
+(\texttt{install.sh}, \texttt{backup.sh}). Il a mis en place et administre
+le LXC \textbf{Dokploy} pour le d\'eploiement automatis\'e ainsi que
+le LXC \textbf{cloudflared} pour le tunnel Cloudflare Zero Trust.
+L'ensemble des services est accessible publiquement via le domaine
+\texttt{lockbits.pro} gr\^ace \`a cette infrastructure. Il coordonne \'egalement
 les phases de d\'eveloppement et la gestion des risques.
 
 \textbf{Swann Kechar}~: D\'eveloppeur EDR, il travaille sur le cœur

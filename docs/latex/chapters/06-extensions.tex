@@ -214,27 +214,32 @@ du projet LockBits repose sur une démarche d'amélioration continue.
 Cette section décrit les pratiques qui doivent être maintenues et
 renforcées tout au long du cycle de vie du logiciel.
 
-\textbf{Revue de code systématique.} Chaque modification du code source
+
+\subsection{Revue de code systématique}
+Chaque modification du code source
 doit passer par une revue par au moins un autre membre de l'équipe. La
 revue vérifie la conformité aux normes de codage, la pertinence des
 tests associés et l'absence d'effets de bord. Les pull requests doivent
 rester de taille modérée pour faciliter la relecture.
 
-\textbf{Mise à jour des dépendances.} Les dépendances logicielles
+\subsection{Mise à jour des dépendances}
+Les dépendances logicielles
 évoluent rapidement, et les correctifs de sécurité sont publiés
 régulièrement. L'outil Dependabot, déjà configuré sur les dépôts,
 propose automatiquement des mises à jour. L'équipe s'engage à les
 traiter dans un délai raisonnable, en particulier pour les correctifs
 de sécurité critiques.
 
-\textbf{Documentation vivante.} La documentation technique doit évoluer
+\subsection{Documentation vivante}
+La documentation technique doit évoluer
 avec le logiciel. Chaque nouvelle fonctionnalité, chaque modification
 d'architecture et chaque changement de configuration doit être reflété
 dans les fichiers de documentation concernés. L'objectif est de
 maintenir un écart minimal entre le code et sa documentation, pour
 éviter que cette dernière ne devienne obsolète.
 
-\textbf{Monitoring des performances.} Les métriques de performance
+\subsection{Monitoring des performances}
+\textbf{} Les métriques de performance
 collectées par Prometheus et visualisées dans Grafana doivent être
 revues périodiquement. Des seuils d'alerte doivent être définis pour
 anticiper les dégradations avant qu'elles n'affectent les clients. Le
@@ -242,6 +247,7 @@ temps de réponse de l'API EDR, l'utilisation mémoire des conteneurs et
 le nombre d'agents actifs sont les indicateurs clés à surveiller en
 priorité.
 
+\subsection{Veille technologique}
 Enfin, la veille technologique fait partie intégrante de la démarche
 d'amélioration continue. Le paysage de la cybersécurité évolue
 rapidement~: de nouvelles menaces apparaissent, de nouveaux outils

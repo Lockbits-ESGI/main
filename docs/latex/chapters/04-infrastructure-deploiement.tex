@@ -333,6 +333,18 @@ configurée dans les \texttt{secrets} GitHub. Les tokens Dokploy sont stockés
 dans les \textbf{secrets GitHub} (\texttt{DOKPLOY\_PROD\_HOOK} et
 \texttt{DOKPLOY\_PREPROD\_HOOK}) et ne sont jamais exposés dans le code source.
 
+L'ensemble de la pipeline est entièrement automatisée~: du push Git au déploiement en production en environ 5 minutes, sans aucune intervention manuelle.
+
+Dokploy est exécuté dans un conteneur LXC dédié sur le serveur Proxmox.
+La stratégie de déploiement est la suivante~: un push sur la branche
+\texttt{main} construit les images avec le tag \texttt{:latest} et déploie
+la stack de production~; un push sur la branche \texttt{develop} construit
+les images avec le tag \texttt{:develop} et déploie la stack de
+pré-production. Dokploy surveille les appels webhook provenant de GitHub
+Actions et redéploie automatiquement la stack concernée. Ce mécanisme
+permet un workflow \textbf{GitOps} complet~: le code est poussé, la CI
+construit les images, et la CD les déploie sans intervention manuelle.
+
 \subsection{Domaines et URLs publiques}
 
 L'ensemble des services est déployé publiquement sur le domaine
