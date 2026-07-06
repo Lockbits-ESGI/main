@@ -234,7 +234,7 @@ type et sévérité, et les statistiques du cache VT.
 \subsection{Dockerisation}
 % ------------------------------------------------------------------------------
 
-Le serveur est containerise via un Dockerfile multi-etapes. L'image est
+Le serveur est containerise via un Dockerfile multi-étapes. L'image est
 publiée sur \texttt{ghcr.io/lockbits-esgi/edr:latest} avec support
 multi-architecture (\texttt{linux/amd64} et \texttt{linux/arm64}).
 
@@ -272,7 +272,7 @@ L'agent est écrit en \textbf{Python 3.12} et compile en binaire autonome
 avec \textbf{PyInstaller}. Cette approche évite toute dépendance
 d'exécution sur la machine cible.
 
-L'architecture est composee de quatre modules :
+L'architecture est composée de quatre modules :
 
 \begin{itemize}
   \item \texttt{agent/main.py} -- point d'entrée et logique métier
@@ -349,7 +349,7 @@ intervalles réguliers (toutes les 10 minutes par défaut).
 modifications de fichiers repose sur la bibliotheque \texttt{watchdog}.
 Lorsqu'un fichier est créé ou modifié dans un répertoire surveillé,
 l'agent calcule son empreinte SHA256 et l'inclut dans l'événement. Les
-fichiers executables (.exe, .dll, .bat, .ps1, .sh) et les chemins
+fichiers exécutables (.exe, .dll, .bat, .ps1, .sh) et les chemins
 sensibles (/tmp/, /var/tmp/, startup) sont marques comme suspects.
 
 \paragraph{Transmission fiable.} Le module \texttt{sender.py} implémente
@@ -373,7 +373,7 @@ La compilation en binaire autonome est réalisée par des scripts spécifiques
     Windows.
 \end{itemize}
 
-Les binaires sont distribues via les GitHub Releases du dépôt principal.
+Les binaires sont distribués via les GitHub Releases du dépôt principal.
 Chaque push sur \texttt{main} déclenche la CI qui compile les binaires
 et met à jour les releases.
 
@@ -401,7 +401,7 @@ curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-age
 \end{lstlisting}
 
 L'agent supporte les commandes \texttt{--update} (mise à jour automatique)
-et \texttt{--uninstall} (desinstallation complète).
+et \texttt{--uninstall} (désinstallation complète).
 
 
 % ==============================================================================
@@ -409,7 +409,7 @@ et \texttt{--uninstall} (desinstallation complète).
 % ==============================================================================
 
 Le site client LockBits est l'interface web qui permet aux clients de
-visualiser leur tableau de bord, gèrer leurs tickets de support, et
+visualiser leur tableau de bord, gérer leurs tickets de support, et
 installer l'agent EDR.
 
 % ------------------------------------------------------------------------------
@@ -467,7 +467,7 @@ function db(): PDO
 \paragraph{Dashboard.} Le tableau de bord affiche des cartes de
 statistiques (statut du service, uptime 30 jours, tickets ouverts, score
 de sécurité) ainsi que la section de déploiement de l'agent EDR avec la
-commande d'installation pre-remplie. L'interface est construite avec
+commande d'installation pré-remplie. L'interface est construite avec
 Tailwind CSS et du JavaScript vanilla.
 
 \paragraph{Tickets.} Les clients peuvent créer, visualiser et suivre
@@ -479,14 +479,14 @@ assurer la cohérence entre le portail client et l'outil interne.
 % ------------------------------------------------------------------------------
 
 La base de données MySQL du site client contient les tables suivantes,
-definies dans \texttt{client/database.sql} :
+définies dans \texttt{client/database.sql} :
 
 \begin{itemize}
   \item \texttt{users} -- comptes clients avec référence vers GLPI
     (\texttt{glpi\_user\_id}) ;
   \item \texttt{tickets} -- tickets de support relies aux utilisateurs
-    et a GLPI (\texttt{glpi\_ticket\_id}) ;
-  \item \texttt{ticket\_messages} -- messages associes aux tickets ;
+    et à GLPI (\texttt{glpi\_ticket\_id}) ;
+  \item \texttt{ticket\_messages} -- messages associés aux tickets ;
   \item \texttt{organizations} -- organisations clients ;
   \item \texttt{edr\_endpoints} -- terminaux enregistrés par organisation ;
   \item \texttt{edr\_reports} -- rapports EDR reçus ;
@@ -519,7 +519,7 @@ des tickets d'un utilisateur via l'API v2.
 % ------------------------------------------------------------------------------
 
 L'image Docker du site client (\texttt{site\_lockbits/Dockerfile}) est
-basee sur \texttt{php:8.2-apache}. Elle intégré :
+basée sur \texttt{php:8.2-apache}. Elle intégre :
 
 \begin{itemize}
   \item Les extensions PHP nécessaires (mysqli, pdo\_mysql, curl, gd,
@@ -549,7 +549,7 @@ le portail client.
 \subsection{Architecture}
 % ------------------------------------------------------------------------------
 
-Le chatbot est implemente dans un fichier PHP unique
+Le chatbot est implementé dans un fichier PHP unique
 (\texttt{site\_lockbits/chat.php}) qui sert de proxy entre le front-end
 JavaScript et l'API Anthropic.
 
@@ -587,8 +587,8 @@ L'assistant virtuel est capable de :
 \begin{itemize}
   \item     Répondre aux questions sur les services LockBits (hébergement,
     cybersécurité, infrastructure) ;
-  \item Fournir un resume du tableau de bord client (tentatives DDoS
-    bloquees, vulnerabilites, incidents) ;
+  \item Fournir un résumé du tableau de bord client (tentatives DDoS
+    bloquées, vulnérabilités, incidents) ;
   \item Conserver l'historique de la conversation entre chaque message ;
 \item S'adapter à la langue du client (français par défaut, anglais
 si nécessaire).
@@ -607,18 +607,18 @@ Plusieurs mesures de sécurité encadrent le chatbot :
 \begin{itemize}
   \item \textbf{Rate limiting} -- compteur quotidien base sur un fichier
     \texttt{usage\_count.txt} qui limite à 100 requêtes par jour toutes
-    sources confondues. Le compteur est reinitialise chaque jour ;
+    sources confondues. Le compteur est réinitialisé chaque jour ;
   \item \textbf{Validation des entrées} -- la méthode POST est obligatoire,
     et le message est vérifié avant traitement ;
   \item \textbf{Clé API} -- la clé d'API Claude est chargée depuis la
     variable d'environnement \texttt{CLAUDE\_API\_KEY}, jamais exposée
     dans le code source ;
-  \item     \textbf{Périmètre restreint} -- le prompt système interdit au
+  \item \textbf{Périmètre restreint} -- le prompt système interdit au
     chatbot de répondre à des questions hors du domaine de LockBits et
     de la cybersécurité.
 \end{itemize}
 
-L'interface utilisateur du chatbot est integree directement dans le
+L'interface utilisateur du chatbot est integrée directement dans le
 dashboard client via du JavaScript vanilla. Elle affiche un badge de
-notification en cas de nouveau message non lu et propose une experience
+notification en cas de nouveau message non lu et propose une expérience
 de messagerie instantanée avec indicateur de saisie.
