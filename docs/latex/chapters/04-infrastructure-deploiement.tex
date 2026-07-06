@@ -210,6 +210,10 @@ vers ces branches. Le pipeline se déroule en quatre étapes principales~:
     pour détecter les vulnérabilités CRITICAL et HIGH.
 \end{enumerate}
 
+Ce pipeline, entièrement développé en interne (homemade), couvre l'ensemble du cycle de livraison logicielle. Lorsqu'un développeur pousse du code sur la branche \texttt{develop}, la CI s'exécute automatiquement~: lint, tests, build des images multi-architecture (linux/amd64 et linux/arm64), push vers le GitHub Container Registry, scan de sécurité Trivy, puis déclenchement du webhook Dokploy qui redéploie la stack de pré-production avec les images \texttt{:develop}. Le même processus s'applique à la branche \texttt{main} pour la production avec les images \texttt{:latest}.
+
+L'ensemble du processus, du push Git au déploiement effectif, prend environ 5 minutes et ne nécessite aucune intervention manuelle. Cette automatisation complète permet à l'équipe de livrer rapidement les correctifs et les nouvelles fonctionnalités, tout en garantissant que chaque livraison passe par les mêmes étapes de validation.
+
 \begin{lstlisting}[language=yaml, caption={Extrait du pipeline CI -- tests unitaires EDR}, label={lst:ci-edr-tests}]
 jobs:
   lint-edr:
@@ -256,7 +260,7 @@ jobs:
 La construction des images est réalisée à l'aide de l'action
 \texttt{docker/build-push-action} avec la prise en charge de la cache
 GitHub Actions (\texttt{cache-from}/\texttt{cache-to}) pour accélérer les
-builds successifs.
+builds successifs. Cette automatisation permet de valider et livrer du code en production de manière fiable et reproductible, sans intervention manuelle.
 
 \subsection{Mise à jour automatique des submodules}
 
