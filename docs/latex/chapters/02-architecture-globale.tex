@@ -9,7 +9,7 @@
 Ce chapitre présente l'architecture globale du projet LockBits. Il décrit
 l'organisation en couches, les composants qui constituent la solution, leurs
 interactions, les flux de données, ainsi que les choix technologiques qui ont
-guide sa conception. L'objectif est de fournir une vue d'ensemble claire et
+guidé sa conception. L'objectif est de fournir une vue d'ensemble claire et
 structurée du système d'information.
 
 % =============================================================================
@@ -35,7 +35,7 @@ responsabilités en quatre niveaux distincts :
     responsabilités et d'optimiser chaque stockage pour son usage.
   \item[Couche monitoring et observabilité] \\[2pt] Collecte de métriques, de logs
     et de traces via la pile Prometheus, Grafana, Loki et Alloy. Garantit
-    la visibilité sur l'etat de l'infrastructure.
+    la visibilité sur l'état de l'infrastructure.
 \end{description}
 
 Cette organisation en couches permet une évolution indépendante de chaque
@@ -125,21 +125,21 @@ respectifs.
 
 \subsection{Interactions entre composants}
 
-Les composants interagissent selon les modalites suivantes :
+Les composants interagissent selon les modalités suivantes :
 
 \begin{itemize}
-  \item Le \textbf{site web} communique avec la base MySQL pour gèrer les
+  \item Le \textbf{site web} communique avec la base MySQL pour gérer les
     comptes clients, les tickets et les métriques. Les données de sécurité
-    sont basees sur les tickets GLPI synchronises avec le portail.
-  \item Le \textbf{serveur EDR} recoit les données des agents via une API
-    REST authentifiee par jeton (\texttt{AUTH\_TOKEN}). Il les stocke en
-    base PostgreSQL et peut declencher des analyses aupres de VirusTotal.
+    sont basées sur les tickets GLPI synchronisés avec le portail.
+  \item Le \textbf{serveur EDR} reçoit les données des agents via une API
+    REST authentifiée par jeton (\texttt{AUTH\_TOKEN}). Il les stocke en
+    base PostgreSQL et peut déclencher des analyses auprès de VirusTotal.
   \item Le \textbf{chatbot} intégré au site web dialogue avec l'API Claude
-    d'Anthropic pour repondre aux questions des visiteurs. Il peut voir la
+    d'Anthropic pour répondre aux questions des visiteurs. Il peut voir la
     discussion du ticket GLPI affichee sur la page courante pour fournir
     une assistance contextuelle.
   \item La \textbf{pile de monitoring} collecte les métriques exposées par
-    chaque service via leurs endpoints \texttt{/metrics} et centralisé les
+    chaque service via leurs endpoints \texttt{/metrics} et centralise les
     logs via Loki et Alloy.
 \end{itemize}
 
@@ -169,7 +169,7 @@ Tous les services sont empaquetés dans des images Docker multi-architecture
 (\texttt{linux/amd64} et \texttt{linux/arm64}). Les images sont publiées
 sur le GitHub Container Registry (GHCR) avec des tags sémantiques
 (\texttt{:latest}, \texttt{:develop}, \texttt{:X.Y.Z}). Cette approche
-garantit la reproductibilité des environnements du développement a la
+garantit la reproductibilité des environnements du développement à la
 production.
 
 \subsection*{3. Isolation réseau}
@@ -181,13 +181,13 @@ Le déploiement utilise deux réseaux Docker distincts :
   \item \textbf{Réseau \texttt{backend}} : isole la base de données MySQL
     du reste. Seul le site web y est connecté.
 \end{itemize}
-Cette séparation garantit qu'une compromission d'un service expose ne donne
-pas un accès direct a la couche de données.
+Cette séparation garantit qu'une compromission d'un service exposé ne donne
+pas un accès direct à la couche de données.
 
 \subsection*{4. Observabilité}
 
 La pile Prometheus, Grafana, Loki et Alloy fournit une visibilité complète
-sur l'etat du système :
+sur l'état du système :
 \begin{itemize}
   \item \textbf{Prometheus} collecte les métriques techniques (CPU, mémoire,
     requêtes, latence).
@@ -208,9 +208,9 @@ L'ensemble de l'infrastructure est décrit dans des fichiers versionnés :
     \texttt{backup.sh} et \texttt{restore.sh} pour la maintenance.
 \end{itemize}
 
-\subsection*{6. Sécurité des la conception}
+\subsection*{6. Sécurité dès la conception}
 
-La sécurité est integree a chaque etape du cycle de vie :
+La sécurité est intégrée à chaque étape du cycle de vie :
 \begin{itemize}
   \item Scan automatique des images Docker avec Trivy dans la pipeline CI.
   \item Gestion des secrets via fichier \texttt{.env} et GitHub Secrets.
@@ -226,7 +226,7 @@ La sécurité est integree a chaque etape du cycle de vie :
 
 \subsection{Stack technique}
 
-Le tableau~\ref{tab:stack-technique} recapitule les technologies utilisees
+Le tableau~\ref{tab:stack-technique} récapitule les technologies utilisées
 pour chaque composant de la solution.
 
 \begin{table}[H]
@@ -254,8 +254,8 @@ pour chaque composant de la solution.
 
 \subsection{Flux de données}
 
-Le schéma suivant illustre les flux de données entre les differents
-composants du système. Chaque fleche represente un echange de données
+Le schéma suivant illustre les flux de données entre les différents
+composants du système. Chaque flèche représente un échange de données
 avec son protocole et sa direction.
 
 \begin{figure}[H]
@@ -336,9 +336,9 @@ avec son protocole et sa direction.
 
 \subsection{Organisation en sous-modules Git}
 
-Le projet suit une architecture multi-dépôts orchestree par un dépôt
-principal. Chaque composant applicatif possede son propre dépôt Git, ce qui
-permet un développement parallele et un versionnement indépendant.
+Le projet suit une architecture multi-dépôts orchestrée par un dépôt
+principal. Chaque composant applicatif possède son propre dépôt Git, ce qui
+permet un développement parallèle et un versionnement indépendant.
 
 \subsubsection{Structure des dépôts}
 
@@ -363,102 +363,102 @@ Lockbits-ESGI/
     └── Dockerfile
 \end{verbatim}
 
-\subsubsection{Mise a jour automatique des sous-modules}
+\subsubsection{Mise à jour automatique des sous-modules}
 
-Un workflow GitHub Actions (\texttt{auto-update-submodules.yml}) s'execute
-toutes les heures. Il verifie si les sous-modules \texttt{edr} et
+Un workflow GitHub Actions (\texttt{auto-update-submodules.yml}) s'exécute
+toutes les heures. Il vérifie si les sous-modules \texttt{edr} et
 \texttt{site\_lockbits} pointent vers le dernier commit de leur branche par
-defaut. Si une mise a jour est disponible, le workflow :
+défaut. Si une mise à jour est disponible, le workflow :
 
 \begin{enumerate}
-  \item Met a jour la référence du sous-module avec
+  \item Met à jour la référence du sous-module avec
     \texttt{git submodule update --remote};
-  \item Cree un commit de mise a jour;
-  \item Pousse sur \texttt{main}, ce qui declenche la pipeline CI/CD de
+  \item Crée un commit de mise à jour;
+  \item Pousse sur \texttt{main}, ce qui déclenche la pipeline CI/CD de
     reconstruction des images.
 \end{enumerate}
 
 Cette automatisation garantit que les images Docker publiées sur GHCR
-refletent toujours la derniere version du code source, sans intervention
+reflètent toujours la dernière version du code source, sans intervention
 manuelle.
 
-\subsubsection{Mise a jour manuelle}
+\subsubsection{Mise à jour manuelle}
 
-Si un besoin immediat se présente, la commande suivante permet de forcer la
-mise a jour depuis le serveur :
+Si un besoin immédiat se présente, la commande suivante permet de forcer la
+mise à jour depuis le serveur :
 
-\begin{lstlisting}[language=bash, caption={Mise a jour manuelle des sous-modules}]
+\begin{lstlisting}[language=bash, caption={Mise à jour manuelle des sous-modules}]
 bash install.sh --update-sources
 \end{lstlisting}
 
-Cette commande execute les memes operations que le workflow automatique :
-mise a jour des références, commit et push.
+Cette commande exécute les mêmes opérations que le workflow automatique :
+mise à jour des références, commit et push.
 
 % =============================================================================
 \section{Justification des choix technologiques}
 % =============================================================================
 
 Chaque technologie a été choisie en fonction des contraintes du projet :
-equipe reduite, delai de huit mois, objectifs pedagogiques et realisme
-professionnel. Cette section detaillle les motivations derriere chaque
+équipe réduite, délai de huit mois, objectifs pédagogiques et réalisme
+professionnel. Cette section détaille les motivations derrière chaque
 choix.
 
 \subsection{FastAPI pour le serveur EDR}
 
 Le choix de FastAPI (Python) pour le serveur backend repose sur plusieurs
-avantages decisifs :
+avantages décisifs :
 
 \begin{itemize}
-  \item \textbf{Performances asynchrones} : base sur ASGI (uvicorn),
+  \item \textbf{Performances asynchrones} : basé sur ASGI (uvicorn),
     FastAPI gère nativement les requêtes concurrentes, ce qui est
-    essentiel pour un serveur traitant des données en temps reel depuis de
+    essentiel pour un serveur traitant des données en temps réel depuis de
     multiples agents.
   \item \textbf{Documentation automatique} : l'interface \texttt{/docs}
-    genere une documentation interactive OpenAPI sans configuration
-    additionnelle, facilitant le debogage et l'intégration.
+    génère une documentation interactive OpenAPI sans configuration
+    additionnelle, facilitant le débogage et l'intégration.
   \item \textbf{Validation des données} : via Pydantic, les schémas de
-    données sont declares en Python et valides automatiquement, reduisant
+    données sont déclarés en Python et validés automatiquement, réduisant
     les risques d'erreurs.
-  \item \textbf{Legèreté} : démarrage rapide, empreinte mémoire reduite,
-    ideal pour un conteneur Docker.
+  \item \textbf{Légèreté} : démarrage rapide, empreinte mémoire réduite,
+    idéal pour un conteneur Docker.
 \end{itemize}
 
-\textbf{Alternatives ecartees} : Flask manque de support asynchrone natif
+\textbf{Alternatives écartées} : Flask manque de support asynchrone natif
 et impose des extensions tierces pour la validation. Django est trop lourd
-pour un service d'API specialise comme l'EDR.
+pour un service d'API spécialisé comme l'EDR.
 
 \subsection{PHP / Apache pour le portail client}
 
-Le portail client utilise PHP 8+ sur Apache, un choix guide par la
-simplicite et l'adequation au besoin :
+Le portail client utilise PHP 8+ sur Apache, un choix guidé par la
+simplicité et l'adéquation au besoin :
 
 \begin{itemize}
   \item \textbf{Déploiement simple} : la stack LAMP est mature et ne
-    necessite pas de build frontend. Le code PHP est directement executable
+    nécessite pas de build frontend. Le code PHP est directement exécutable
     sur le serveur.
   \item \textbf{Pages serveur} : le portail affiche des données issues de
     MySQL (tableau de bord, tickets, historique). PHP excelle dans ce modèle
     de rendu serveur.
-  \item \textbf{Compatibilite MySQL} : les pilotes natifs PHP pour MySQL
-    sont performants et bien documentes.
-  \item \textbf{Couts de maintenance} : une equipe reduite peut maintenir
+  \item \textbf{Compatibilité MySQL} : les pilotes natifs PHP pour MySQL
+    sont performants et bien documentés.
+  \item \textbf{Coûts de maintenance} : une équipe réduite peut maintenir
     un site PHP sans infrastructure frontend complexe.
 \end{itemize}
 
-\textbf{Alternatives ecartees} : React/Next.js auraient necessite un
+\textbf{Alternatives écartées} : React/Next.js auraient nécessité un
 serveur Node.js supplémentaire et un build frontend, ajoutant de la
-complexite sans benefice significatif pour un portail client a pages
+complexité sans bénéfice significatif pour un portail client à pages
 serveur.
 
 \subsection{MySQL 8.0 pour la base de données du site}
 
 \begin{itemize}
-  \item \textbf{Fiabilité} : MySQL est eprouve depuis des decennies dans
-    des environnements de production varies.
-  \item \textbf{Compatibilité PHP} : l'ecosysteme PHP est historiquement
-    lie a MySQL, avec des pilotes matures et optimises.
+  \item \textbf{Fiabilité} : MySQL est éprouvé depuis des décennies dans
+    des environnements de production variés.
+  \item \textbf{Compatibilité PHP} : l'écosystème PHP est historiquement
+    lié à MySQL, avec des pilotes matures et optimisés.
   \item \textbf{Sauvegardes simples} : \texttt{mysqldump} permet des
-    sauvegardes coherentes sans outils tiers.
+    sauvegardes cohérentes sans outils tiers.
   \item \textbf{Performance} : pour le volume de données attendu (clients,
     tickets, métriques), MySQL 8.0 offre des performances amplement
     suffisantes.
@@ -467,10 +467,10 @@ serveur.
 \subsection{SQLite pour la base de données EDR}
 
 \begin{itemize}
-  \item \textbf{Simplicité} : pas de serveur de base de données a gèrer.
-    Le fichier SQLite est stocke dans un volume Docker.
+  \item \textbf{Simplicité} : pas de serveur de base de données à gérer.
+    Le fichier SQLite est stocké dans un volume Docker.
   \item \textbf{Volume adapté} : les données EDR (événements, alertes,
-    scans) restent moderees pour une PME.
+    scans) restent modérées pour une PME.
   \item \textbf{Migration possible} : l'architecture permet de basculer
     vers PostgreSQL en production sans modification majeure du code,
     via la configuration \texttt{DATABASE\_URL}.
@@ -479,30 +479,30 @@ serveur.
 \subsection{Docker Compose pour l'orchestration}
 
 \begin{itemize}
-  \item \textbf{Simplicité} : Docker Compose definit l'ensemble des
+  \item \textbf{Simplicité} : Docker Compose définit l'ensemble des
     services, réseaux et volumes dans un fichier YAML lisible.
   \item \textbf{Un seul hôte} : le déploiement cible un serveur unique
-    (VM Proxmox), ce qui rend Kubernetes surdimensionne.
-  \item \textbf{Realisme} : Docker Compose est utilise en production par
+    (VM Proxmox), ce qui rend Kubernetes surdimensionné.
+  \item \textbf{Réalisme} : Docker Compose est utilisé en production par
     de nombreuses PME et startups pour des charges modestes.
   \item \textbf{Compatible Dokploy} : la plateforme de déploiement
-    utilisee supporte nativement les stacks Docker Compose.
+    utilisée supporte nativement les stacks Docker Compose.
 \end{itemize}
 
-\textbf{Alternative e cartée} : Kubernetes (K3s) a été ecarte car trop
+\textbf{Alternative écartée} : Kubernetes (K3s) a été écarté car trop
 complexe pour l'infrastructure actuelle, mais reste une évolution viable
-et coherente a plus long terme.
+et cohérente à plus long terme.
 
 \subsection{GitHub Actions pour le CI/CD}
 
 \begin{itemize}
-  \item \textbf{Intégration native} : le projet est heberge sur GitHub.
-    GitHub Actions s'intégré sans configuration tierce.
+  \item \textbf{Intégration native} : le projet est hébergé sur GitHub.
+    GitHub Actions s'intègre sans configuration tierce.
   \item \textbf{Zéro infrastructure} : les runners sont fournis par GitHub,
-    sans serveur CI a gèrer.
-  \item \textbf{Workflows homemade} : les pipelines sont entierement
+    sans serveur CI à gérer.
+  \item \textbf{Workflows homemade} : les pipelines sont entièrement
     écrits sur mesure (faits maison), sans utiliser d'actions
-    pre-construites pour la logique metier.
+    pré-construites pour la logique métier.
   \item \textbf{Gratuit} : pour un projet open-source, les quotas gratuits
     sont largement suffisants.
 \end{itemize}
@@ -511,49 +511,49 @@ et coherente a plus long terme.
 
 \begin{itemize}
   \item \textbf{Gratuit pour les organisations GitHub} : les images publiques
-    sont autorisees sans limite de stockage.
-  \item \textbf{Intégration GitHub} : pas de compte Docker Hub sépare a
-    gèrer. L'authentification utilise le token GitHub existant.
+    sont autorisées sans limite de stockage.
+  \item \textbf{Intégration GitHub} : pas de compte Docker Hub séparé à
+    gérer. L'authentification utilise le token GitHub existant.
   \item \textbf{Limites de pull élevées} : GHCR offre des quotas plus
-    genereux que Docker Hub pour les images publiques.
-  \item \textbf{Scan de vulnérabilités} : GHCR propose des fonctionnalites
-    de scan de sécurité, qui peuvent être utilisees pour analyser les
-    images stockees.
+    généreux que Docker Hub pour les images publiques.
+  \item \textbf{Scan de vulnérabilités} : GHCR propose des fonctionnalités
+    de scan de sécurité, qui peuvent être utilisées pour analyser les
+    images stockées.
 \end{itemize}
 
 % =============================================================================
 \section{Évolution de l'architecture}
 % =============================================================================
 
-L'architecture de LockBits a été concue pour evoluer par phases. Cette
-section décrit la roadmap d'implementation, du MVP jusqu'aux extensions
+L'architecture de LockBits a été conçue pour évoluer par phases. Cette
+section décrit la roadmap d'implémentation, du MVP jusqu'aux extensions
 futures.
 
 \subsection{Phase MVP -- Fondations}
 
-La phase initiale etablit la base fonctionnelle du système :
+La phase initiale établit la base fonctionnelle du système :
 
 \begin{itemize}
-  \item Déploiement Docker Compose sur un hote unique avec l'ensemble de
+  \item Déploiement Docker Compose sur un hôte unique avec l'ensemble de
     la stack.
   \item Serveur EDR fonctionnel : API REST, base SQLite, heartbeat des
     agents, scan local.
-  \item Site web operationnel : authentification, tableau de bord, tickets.
+  \item Site web opérationnel : authentification, tableau de bord, tickets.
   \item Chatbot intégré au site avec l'API Claude.
   \item Pipeline CI de base : lint, build, push vers GHCR.
 \end{itemize}
 
 \subsection{Phase Consolidation -- Mise en production}
 
-Cette phase renforce la robustesse et la maintenabilite :
+Cette phase renforce la robustesse et la maintenabilité :
 
 \begin{itemize}
   \item CI/CD complète avec tests unitaires, intégration et scan Trivy.
-  \item Déploiement automatise via Dokploy.
+  \item Déploiement automatisé via Dokploy.
   \item Monitoring complète : Prometheus, Grafana, Loki, Alloy.
-  \item Scripts de sauvegarde et restauration automatises.
+  \item Scripts de sauvegarde et restauration automatisés.
   \item Hardening de la sécurité : CORS, rate limiting, secrets.
-  \item Documentation operationnelle et d'architecture.
+  \item Documentation opérationnelle et d'architecture.
 \end{itemize}
 
 \subsection{Phase Extension -- Passage à l'échelle}
@@ -565,9 +565,9 @@ incluent :
   \item Migration vers Kubernetes (K3s) pour la haute disponibilité.
   \item SIEM complète avec Wazuh ou ELK.
   \item Authentification OAuth2 complète (Google, Microsoft).
-  \item Interface d'administration web dédiée a l'EDR.
-  \item Tests de pénétration pourraient être envisages via des outils
-    comme OWASP ZAP intégrés a la pipeline CI/CD.
+  \item Interface d'administration web dédiée à l'EDR.
+  \item Tests de pénétration pourraient être envisagés via des outils
+    comme OWASP ZAP intégrés à la pipeline CI/CD.
   \item Support IPv6.
 \end{itemize}
 
