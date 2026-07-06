@@ -515,11 +515,11 @@ scrape_configs:
       - targets: ["lockbits_web:80"]
 \end{lstlisting}
 
-Les cibles de scraping utilisent les noms de conteneurs (\texttt{lockbits\_edr},
-\texttt{lockbits\_web}) plutôt que les noms de services Docker Compose
-(\texttt{edr-server}, \texttt{site-web}). Cette précaution évite le round-robin
-DNS qui se produirait si les deux stacks (production et pré-production)
-partageaient le même réseau Dokploy.
+Les cibles de scraping utilisent les noms de services Docker Compose
+(\texttt{edr-server}, \texttt{site-web}) plutôt que les noms de conteneurs
+(\texttt{lockbits\_edr}, \texttt{lockbits\_web}). L'utilisation du \texttt{project name}
+(\texttt{lockbits-prod}) garantit que les noms DNS pointent vers la bonne stack,
+évitant le round-robin DNS entre production et pré-production.
 
 \subsection{Métriques collectées}
 
