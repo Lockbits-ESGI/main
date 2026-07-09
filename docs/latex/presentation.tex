@@ -1,0 +1,175 @@
+\documentclass[10pt]{beamer}
+
+% ── Beamer Theme ──
+\usetheme{Madrid}
+\usecolortheme{whale}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+% ── Encoding & Fonts ──
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{inconsolata}
+
+% ── Metadata ──
+\title{\textbf{LockBits — Solution EDR Open-Source\\\& Portail Client}}
+\subtitle{Dossier d'Architecture — Présentation}
+\author{Cléry A.-Ferradou \and Swann Kechar \and Soltane Afellah \and Quentin Labourdette}
+\institute{ESGI — Projet Annuel 2\ieme{} année — 2025-2026}
+\date{}
+
+% ── Helper for compact items ──
+\newcommand{\bitem}{\item[$\bullet$]}
+
+\begin{document}
+
+% ============================================================
+% Slide 1 — Title
+% ============================================================
+\begin{frame}
+  \titlepage
+  \vfill
+  \centering
+  \small\textbf{Équipe}\\[2pt]
+  Cléry A.-Ferradou \textit{(Chef de Projet / DevOps / Hébergeur)} —
+  Swann Kechar \textit{(EDR)} —
+  Soltane Afellah \textit{(Site)} —
+  Quentin Labourdette \textit{(Chatbot)}
+\end{frame}
+
+% ============================================================
+% Slide 2 — Contexte \& Objectifs
+% ============================================================
+\begin{frame}{Contexte \& Objectifs}
+  \begin{block}{Contexte}
+    Entreprise fictive de cybersécurité souhaitant se doter d'une infrastructure
+    complète de sniffing et d'analyse de menaces.
+  \end{block}
+
+  \begin{block}{4 composants majeurs}
+    \begin{itemize}
+      \bitem \textbf{EDR} — Agent de détection déployé sur les postes clients + Serveur central
+      \bitem \textbf{Site client} — Portail client avec suivi des alertes et tickets GLPI
+      \bitem \textbf{Chatbot} — Assistant automatique alimenté par l'API Claude
+      \bitem \textbf{DevOps} — CI/CD automatisé, conteneurisation Docker, monitoring complet
+    \end{itemize}
+  \end{block}
+
+  \textbf{Objectif :} livrer une infrastructure professionnelle de A à Z, de
+  l'écriture du code au déploiement en production.
+\end{frame}
+
+% ============================================================
+% Slide 3 — Architecture Globale
+% ============================================================
+\begin{frame}{Architecture Globale}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{Stack technique}
+    \begin{itemize}
+      \bitem \textbf{Backend EDR} : FastAPI (Python)
+      \bitem \textbf{Site client} : PHP 8+ / Apache
+      \bitem \textbf{Bases} : MySQL, PostgreSQL
+      \bitem \textbf{Conteneurisation} : Docker
+      \bitem \textbf{CI/CD} : GitHub Actions
+    \end{itemize}
+
+    \column{0.48\textwidth}
+    \textbf{Flux de communication}
+    \begin{itemize}
+      \bitem Agent $\rightarrow$ EDR $\rightarrow$ VirusTotal / GLPI
+      \bitem Client $\rightarrow$ Site $\rightarrow$ MySQL / GLPI
+      \bitem Chatbot $\rightarrow$ Claude API
+    \end{itemize}
+  \end{columns}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Organisation du code}
+    Dépôt unique avec sous-modules Git : \texttt{edr/}, \texttt{site\_lockbits/}.
+    Déploiement différencié par environnement.
+  \end{alertblock}
+\end{frame}
+
+% ============================================================
+% Slide 4 — Composants Applicatifs
+% ============================================================
+\begin{frame}{Composants Applicatifs}
+  \begin{description}
+    \item[\textbf{EDR Server}] \hfill \\
+      FastAPI, API REST, détection de menaces, VirusTotal,
+      création automatique de tickets GLPI, métriques Prometheus
+    \item[\textbf{EDR Agent}] \hfill \\
+      Python, packagé via PyInstaller, scan fichiers / monitoring /
+      FIM (\textit{File Integrity Monitoring}), heartbeat, déploiement one-liner
+    \item[\textbf{Site Client}] \hfill \\
+      PHP 8+, Apache, MySQL, Tailwind CSS, SSO GLPI
+    \item[\textbf{Chatbot}] \hfill \\
+      Proxy PHP vers Claude API, rate limiting (100 requêtes/jour)
+  \end{description}
+\end{frame}
+
+% ============================================================
+% Slide 5 — Infrastructure \& CI/CD
+% ============================================================
+\begin{frame}{Infrastructure \& CI/CD}
+  \textbf{Conteneurisation}
+  \begin{itemize}
+    \bitem Docker multi-architecture (\texttt{amd64} + \texttt{arm64})
+    \bitem Docker Compose : environnements \texttt{dev}, \texttt{preprod}, \texttt{prod}
+    \bitem Registry GHCR (\textit{GitHub Container Registry})
+  \end{itemize}
+
+  \textbf{CI/CD 100\% homemade}
+  \begin{itemize}
+    \bitem Pipeline : push $\rightarrow$ lint $\rightarrow$ test $\rightarrow$ build $\rightarrow$ scan Trivy $\rightarrow$ push GHCR $\rightarrow$ webhook Dokploy $\rightarrow$ déploiement en $\sim$5\,min
+    \bitem Stratégie : \texttt{master} $\rightarrow$ prod (\texttt{:latest}), \texttt{develop} $\rightarrow$ preprod (\texttt{:develop})
+  \end{itemize}
+
+  \textbf{Hébergement \& Monitoring}
+  \begin{itemize}
+    \bitem Proxmox personnel, LXC Dokploy, LXC cloudflared, Cloudflare Zero Trust
+    \bitem Stack observabilité : Prometheus, Grafana, Loki, Alloy
+  \end{itemize}
+\end{frame}
+
+% ============================================================
+% Slide 6 — Démo / Résultats
+% ============================================================
+\begin{frame}{Démo \& Résultats}
+  \begin{exampleblock}{Services en ligne}
+    \begin{itemize}
+      \bitem \textbf{Portail client} : \texttt{lockbits.pro}
+      \bitem \textbf{EDR} : \texttt{edr.lockbits.pro}
+      \bitem \textbf{Chatbot} : \texttt{chat.lockbits.pro}
+    \end{itemize}
+  \end{exampleblock}
+
+  \begin{itemize}
+    \bitem Pipeline CI entièrement verte — déploiement automatisé en quelques minutes
+    \bitem Installation one-liner pour l'agent EDR :
+      \texttt{curl -sSL https://edr.lockbits.pro/install | bash}
+    \bitem Monitoring temps réel : métriques, logs centralisés, alertes
+    \bitem Architecture reproductible et industrialisée
+  \end{itemize}
+\end{frame}
+
+% ============================================================
+% Slide 7 — Merci
+% ============================================================
+\begin{frame}{Merci}
+  \vspace{2em}
+  \centering
+  {\Large Des questions ?}
+
+  \vspace{1.5em}
+  \rule{0.4\textwidth}{0.5pt}
+
+  \vspace{1em}
+  \url{https://github.com/Lockbits-ESGI}
+
+  \vspace{0.5em}
+  \small\textit{LockBits — EDR Open-Source \& Portail Client — ESGI 2025-2026}
+\end{frame}
+
+\end{document}
