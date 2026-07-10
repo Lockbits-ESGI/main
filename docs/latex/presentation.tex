@@ -1,4 +1,4 @@
-\documentclass[10pt]{beamer}
+\documentclass[xcolor=dvipsnames, aspectratio=169, 10pt]{beamer}
 
 % ── Beamer Theme ──
 \usetheme{Madrid}
@@ -11,22 +11,29 @@
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
 \usepackage{inconsolata}
+\usepackage{booktabs}
+\usepackage{xcolor}
 
-% ── Metadata ──
+% ── Couleurs personnalisées ──
+\definecolor{primaryblue}{RGB}{0, 82, 164}
+\definecolor{accentorange}{RGB}{230, 126, 34}
+
+% ── Métadonnées ──
 \title{\textbf{LockBits — Solution EDR Open-Source\\\& Portail Client}}
-\subtitle{Dossier d'Architecture — Présentation}
+\subtitle{Dossier d'Architecture — Présentation Orale}
 \author{Cléry A.-Ferradou \and Swann Kechar \and Soltane Afellah \and Quentin Labourdette}
 \institute{ESGI — Projet Annuel 2\ieme{} année — 2025-2026}
-\date{}
+\date{10 Juillet 2026}
 
-% ── Helper for compact items ──
+% ── Helper ──
 \newcommand{\bitem}{\item[$\bullet$]}
+\newcommand{\arrow}{$\rightarrow$}
 
 \begin{document}
 
-% ============================================================
-% Slide 1 — Title
-% ============================================================
+% ========================================================================
+% SLIDE 1 — TITLE
+% ========================================================================
 \begin{frame}
   \titlepage
   \vfill
@@ -34,142 +41,626 @@
   \small\textbf{Équipe}\\[2pt]
   Cléry A.-Ferradou \textit{(Chef de Projet / DevOps / Hébergeur)} —
   Swann Kechar \textit{(EDR)} —
-  Soltane Afellah \textit{(Site)} —
+  Soltane Afellah \textit{(Site Client)} —
   Quentin Labourdette \textit{(Chatbot)}
 \end{frame}
+\note{
+  Présentation de 20 minutes — 4 parties.
+  L'ordre suit le cycle : conception (Cléry) → exécution technique (Swann) → interface client (Soltane) → assistance (Quentin).
+}
 
-% ============================================================
-% Slide 2 — Contexte \& Objectifs
-% ============================================================
-\begin{frame}{Contexte \& Objectifs}
-  \begin{block}{Contexte}
-    Entreprise fictive de cybersécurité souhaitant se doter d'une infrastructure
-    complète de sniffing et d'analyse de menaces.
-  \end{block}
+% ========================================================================
+% SECTION CLÉRY — Contexte, Architecture, CI/CD, Infrastructure
+% ========================================================================
+\section{Cléry — Contexte \& Infrastructure}
 
-  \begin{block}{4 composants majeurs}
-    \begin{itemize}
-      \bitem \textbf{EDR} — Agent de détection déployé sur les postes clients + Serveur central
-      \bitem \textbf{Site client} — Portail client avec suivi des alertes et tickets GLPI
-      \bitem \textbf{Chatbot} — Assistant automatique alimenté par l'API Claude
-      \bitem \textbf{DevOps} — CI/CD automatisé, conteneurisation Docker, monitoring complet
-    \end{itemize}
-  \end{block}
-
-  \textbf{Objectif :} livrer une infrastructure professionnelle de A à Z, de
-  l'écriture du code au déploiement en production.
+% --- Slide 2 : Contexte ---
+\begin{frame}{Contexte du Projet}
+  \textbf{Pourquoi LockBits ?}
+  \begin{itemize}
+    \bitem Entreprise fictive de \textbf{cybersécurité} qui veut détecter les menaces sur ses postes clients
+    \bitem Objectif : bâtir une \textbf{infrastructure complète} — du code au déploiement
+    \bitem 4 étudiants, \textbf{8 mois}, matériel personnel (serveur Proxmox)
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Ce qu'on a livré :}
+  \begin{itemize}
+    \bitem \textbf{EDR} (Endpoint Detection \& Response) — agent + serveur
+    \bitem \textbf{Portail client} — suivi des alertes, tickets, profil
+    \bitem \textbf{Chatbot} — assistant automatique pour les clients
+    \bitem \textbf{DevOps} — CI/CD, Docker, monitoring, hébergement
+  \end{itemize}
 \end{frame}
+\note{
+  Commencer par planter le décor : on a créé une boîte fictive de cybersécurité.
+  Pas de budget, pas d'infrastructure — tout a été fait maison.
+  Montrer qu'on a couvert l'ensemble du cycle de vie logiciel.
+}
 
-% ============================================================
-% Slide 3 — Architecture Globale
-% ============================================================
-\begin{frame}{Architecture Globale}
+% --- Slide 3 : Stack Technique ---
+\begin{frame}{Stack Technique}
+  \centering
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Composant} & \textbf{Technologie} & \textbf{Rôle} \\
+    \midrule
+    Serveur EDR & FastAPI (Python) & API REST, détection menaces \\
+    Agent EDR & Python + PyInstaller & Scan, monitoring, FIM \\
+    Site client & PHP 8+ / Apache & Portail client web \\
+    Base clients & MySQL & Données clients, tickets \\
+    Base EDR & PostgreSQL & Événements, alertes, scans \\
+    Chatbot & PHP → Claude API & Assistant automatique \\
+    Conteneurs & Docker + GHCR & Multi-arch (amd64 + arm64) \\
+    CI/CD & GitHub Actions (homemade) & Pipeline complète \\
+    Monitoring & Prometheus / Grafana / Loki & Métriques, logs, alertes \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+\note{
+  Pour le jury non technique : montrer qu'on a utilisé des technos variées et modernes.
+  Pour le technique : insister sur le choix d'outils adaptés à la taille du projet — pas de Kubernetes pour 4 composants, Docker Compose suffit.
+  Les pipelines CI/CD sont 100\% faites maison, pas des templates copiés-collés.
+}
+
+% --- Slide 4 : Architecture Globale ---
+\begin{frame}{Architecture Globale — Vue d'Ensemble}
   \begin{columns}[t]
     \column{0.48\textwidth}
-    \textbf{Stack technique}
+    \textbf{4 composants majeurs}
     \begin{itemize}
-      \bitem \textbf{Backend EDR} : FastAPI (Python)
-      \bitem \textbf{Site client} : PHP 8+ / Apache
-      \bitem \textbf{Bases} : MySQL, PostgreSQL
-      \bitem \textbf{Conteneurisation} : Docker
-      \bitem \textbf{CI/CD} : GitHub Actions
+      \bitem \textbf{Serveur EDR} : reçoit les événements des agents, scan VirusTotal, crée des tickets GLPI
+      \bitem \textbf{Agent EDR} : tourne sur les postes, surveille fichiers et processus
+      \bitem \textbf{Site client} : portail web avec dashboard, tickets, authentification
+      \bitem \textbf{Chatbot} : assistant basé sur Claude API, intégré au site
     \end{itemize}
-
     \column{0.48\textwidth}
-    \textbf{Flux de communication}
+    \textbf{Flux de données}
     \begin{itemize}
-      \bitem Agent $\rightarrow$ EDR $\rightarrow$ VirusTotal / GLPI
-      \bitem Client $\rightarrow$ Site $\rightarrow$ MySQL / GLPI
-      \bitem Chatbot $\rightarrow$ Claude API
+      \bitem Agent $\rightarrow$ EDR API $\rightarrow$ VirusTotal / GLPI
+      \bitem Client $\rightarrow$ Site PHP $\rightarrow$ MySQL / GLPI SSO
+      \bitem Chatbot $\rightarrow$ Claude API (Anthropic)
+      \bitem CI : push $\rightarrow$ build $\rightarrow$ scan $\rightarrow$ registry
+      \bitem CD : webhook $\rightarrow$ Dokploy $\rightarrow$ déploiement
     \end{itemize}
   \end{columns}
-
-  \vspace{0.5em}
-  \begin{alertblock}{Organisation du code}
-    Dépôt unique avec sous-modules Git : \texttt{edr/}, \texttt{site\_lockbits/}.
-    Déploiement différencié par environnement.
+  \vspace{0.3cm}
+  \begin{alertblock}{3 dépôts Git}
+    \texttt{github.com/Lockbits-ESGI/main} (orchestrateur + CI/CD + docs) \\
+    \texttt{edr} et \texttt{site\_lockbits} en sous-modules
   \end{alertblock}
 \end{frame}
+\note{
+  Expliquer la circulation des données : l'agent détecte un fichier suspect $\rightarrow$ l'envoie au serveur $\rightarrow$ le serveur le scan avec VirusTotal $\rightarrow$ si critique, crée un ticket GLPI automatiquement.
+  Pour le site : le client se connecte $\rightarrow$ voit ses tickets GLPI synchronisés $\rightarrow$ peut discuter avec le chatbot.
+}
 
-% ============================================================
-% Slide 4 — Composants Applicatifs
-% ============================================================
-\begin{frame}{Composants Applicatifs}
-  \begin{description}
-    \item[\textbf{EDR Server}] \hfill \\
-      FastAPI, API REST, détection de menaces, VirusTotal,
-      création automatique de tickets GLPI, métriques Prometheus
-    \item[\textbf{EDR Agent}] \hfill \\
-      Python, packagé via PyInstaller, scan fichiers / monitoring /
-      FIM (\textit{File Integrity Monitoring}), heartbeat, déploiement one-liner
-    \item[\textbf{Site Client}] \hfill \\
-      PHP 8+, Apache, MySQL, Tailwind CSS, SSO GLPI
-    \item[\textbf{Chatbot}] \hfill \\
-      Proxy PHP vers Claude API, rate limiting (100 requêtes/jour)
-  \end{description}
-\end{frame}
-
-% ============================================================
-% Slide 5 — Infrastructure \& CI/CD
-% ============================================================
-\begin{frame}{Infrastructure \& CI/CD}
-  \textbf{Conteneurisation}
+% --- Slide 5 : CI/CD Pipeline ---
+\begin{frame}{CI/CD — Pipeline 100\% Homemade}
+  \textbf{Pipeline complète (GitHub Actions)}
+  \begin{enumerate}
+    \item \textbf{Push} sur \texttt{develop} ou \texttt{main}
+    \item \textbf{Lint} : Ruff (Python), PHP CS Fixer
+    \item \textbf{Tests unitaires} : pytest (EDR), PHPUnit (Site)
+    \item \textbf{Build multi-arch} : Docker buildx (amd64 + arm64)
+    \item \textbf{Push} vers GitHub Container Registry (GHCR)
+    \item \textbf{Scan Trivy} : blocage si CRITICAL ou HIGH
+    \item \textbf{Webhook} $\rightarrow$ Dokploy $\rightarrow$ déploiement auto
+  \end{enumerate}
+  \vspace{0.3cm}
+  \textbf{Stratégie}
   \begin{itemize}
-    \bitem Docker multi-architecture (\texttt{amd64} + \texttt{arm64})
-    \bitem Docker Compose : environnements \texttt{dev}, \texttt{preprod}, \texttt{prod}
-    \bitem Registry GHCR (\textit{GitHub Container Registry})
+    \bitem \texttt{main} $\rightarrow$ \texttt{:latest} $\rightarrow$ \textbf{production}
+    \bitem \texttt{develop} $\rightarrow$ \texttt{:develop} $\rightarrow$ \textbf{pré-production}
   \end{itemize}
-
-  \textbf{CI/CD 100\% homemade}
-  \begin{itemize}
-    \bitem Pipeline : push $\rightarrow$ lint $\rightarrow$ test $\rightarrow$ build $\rightarrow$ scan Trivy $\rightarrow$ push GHCR $\rightarrow$ webhook Dokploy $\rightarrow$ déploiement en $\sim$5\,min
-    \bitem Stratégie : \texttt{master} $\rightarrow$ prod (\texttt{:latest}), \texttt{develop} $\rightarrow$ preprod (\texttt{:develop})
-  \end{itemize}
-
-  \textbf{Hébergement \& Monitoring}
-  \begin{itemize}
-    \bitem Proxmox personnel, LXC Dokploy, LXC cloudflared, Cloudflare Zero Trust
-    \bitem Stack observabilité : Prometheus, Grafana, Loki, Alloy
-  \end{itemize}
-\end{frame}
-
-% ============================================================
-% Slide 6 — Démo / Résultats
-% ============================================================
-\begin{frame}{Démo \& Résultats}
-  \begin{exampleblock}{Services en ligne}
-    \begin{itemize}
-      \bitem \textbf{Portail client} : \texttt{lockbits.pro}
-      \bitem \textbf{EDR} : \texttt{edr.lockbits.pro}
-      \bitem \textbf{Chatbot} : \texttt{chat.lockbits.pro}
-    \end{itemize}
+  \begin{exampleblock}{$\sim$5 minutes du push au déploiement — zéro intervention manuelle}
   \end{exampleblock}
+\end{frame}
+\note{
+  Insister sur le fait que tout est fait maison — pas de templates GitHub Actions pré-construits.
+  Le pipeline tourne en \textasciitilde5 minutes : le temps de build multi-arch est le plus long.
+  Le scan Trivy est bloquant : si une vulnérabilité CRITICAL est trouvée, l'image n'est pas déployée.
+  Déploiement via webhook : Dokploy écoute les webhooks et redéploie automatiquement.
+}
 
+% --- Slide 6 : Infrastructure & Hébergement ---
+\begin{frame}{Infrastructure \& Hébergement}
+  \textbf{Serveur Proxmox personnel}
   \begin{itemize}
-    \bitem Pipeline CI entièrement verte — déploiement automatisé en quelques minutes
-    \bitem Installation one-liner pour l'agent EDR :
-      \texttt{curl -sSL https://edr.lockbits.pro/install | bash}
-    \bitem Monitoring temps réel : métriques, logs centralisés, alertes
-    \bitem Architecture reproductible et industrialisée
+    \bitem Auto-hébergé, contient tous les services dans des LXC
+    \bitem \textbf{LXC Dokploy} : plateforme de déploiement automatisé
+    \bitem \textbf{LXC cloudflared} : tunnel Cloudflare Zero Trust
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Cloudflare Zero Trust}
+  \begin{itemize}
+    \bitem Connexion \textbf{sortante uniquement} — aucun port ouvert sur le serveur
+    \bitem Avantages : HTTPS automatique, protection DDoS, AuthZero, cache
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Domaines publics}
+  \begin{itemize}
+    \bitem \texttt{lockbits.pro} — Portail client
+    \bitem \texttt{edr.lockbits.pro} — API EDR
+    \bitem \texttt{preprod-edr.lockbits.pro} — Pré-production
+    \bitem \texttt{chat.lockbits.pro} — Chatbot
   \end{itemize}
 \end{frame}
+\note{
+  L'infrastructure tourne sur le serveur personnel de Cléry — c'est un vrai serveur Proxmox à la maison.
+  Cloudflare Zero Trust = le serveur n'expose aucun port, tout passe par le tunnel cloudflared. C'est plus sûr que d'ouvrir des ports.
+  Les domaines sont en \texttt{lockbits.pro} — bien réels, accessibles en ligne.
+}
 
-% ============================================================
-% Slide 7 — Merci
-% ============================================================
+% --- Slide 7 : Monitoring & Observabilité ---
+\begin{frame}{Monitoring \& Observabilité}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{Stack PLA}
+    \begin{itemize}
+      \bitem \textbf{Prometheus} : collecte des métriques EDR (agents, événements, scans)
+      \bitem \textbf{Loki} : centralisation des logs (serveur, site, agent)
+      \bitem \textbf{Alloy} : agent de collecte léger
+      \bitem \textbf{Grafana} : dashboards visuels + alerting
+    \end{itemize}
+    \column{0.48\textwidth}
+    \textbf{Métriques clés}
+    \begin{itemize}
+      \bitem Nombre d'agents connectés / actifs / silencieux
+      \bitim Événements par minute : détections, alertes, erreurs
+      \bitem Statut des services : santé API, base de données
+      \bitem Métriques système : RAM, CPU, disque (node exporter)
+    \end{itemize}
+  \end{columns}
+  \vspace{0.3cm}
+  \begin{alertblock}{Sécurité}
+    Scan Trivy sur chaque build — secrets dans GitHub Secrets + .env — CORS et rate limiting sur l'API EDR
+  \end{alertblock}
+\end{frame}
+\note{
+  L'observabilité est essentielle pour un EDR : on doit savoir en temps réel ce qui se passe.
+  Prometheus scrape les métriques du serveur EDR toutes les 15s.
+  Grafana permet de visualiser : nombre d'agents, événements détectés, statut des services.
+  La sécurité est intégrée partout : scan des images, gestion des secrets, pas de mot de passe en clair.
+}
+
+% ========================================================================
+% SECTION SWANN — EDR Server & Agent
+% ========================================================================
+\section{Swann — EDR Server \& Agent}
+
+% --- Slide 8 : EDR Server Architecture ---
+\begin{frame}{EDR Server — Architecture}
+  \textbf{Un serveur FastAPI (Python) conçu pour la détection}
+  \begin{itemize}
+    \bitem API REST asynchrone avec Uvicorn
+    \bitem \textbf{Endpoints} : \texttt{/health}, \texttt{/api/v1/stats}, \texttt{/api/v1/agents}, \texttt{/api/v1/events}
+    \bitem Authentification par \textbf{API key} partagée avec l'agent
+    \bitem \textbf{Rate limiting} : protection contre les abus
+    \bitem \textbf{CORS} : configurable pour accepter le site client
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Structure du code}
+  \begin{itemize}
+    \bitem \texttt{server/main.py} : point d'entrée, configuration
+    \bitem \texttt{server/api.py} : routes et endpoints
+    \bitem \texttt{server/schemas.py} : modèles Pydantic
+    \bitem \texttt{server/metrics.py} : métriques Prometheus
+    \bitem \texttt{server/virus\_total.py} : scan VirusTotal
+    \bitem \texttt{server/glpi.py} : création tickets GLPI
+  \end{itemize}
+\end{frame}
+\note{
+  Le serveur est le cœur du système : il reçoit les données de tous les agents.
+  FastAPI a été choisi pour ses performances (asynchrone) et sa facilité de développement.
+  L'authentification est simple mais efficace : une API key partagée, changée en production.
+}
+
+% --- Slide 9 : EDR Server — Intégrations ---
+\begin{frame}{EDR Server — VirusTotal \& GLPI}
+  \begin{block}{VirusTotal — Scan automatique}
+    \begin{itemize}
+      \bitem Quand un agent envoie un fichier suspect, le serveur le transmet à l'API VirusTotal
+      \bitem \textbf{Worker asynchrone} : ne bloque pas le thread principal
+      \bitem Résultat : score de réputation, moteurs de détection déclenchés
+      \bitem Si score $>$ seuil $\rightarrow$ alerte immédiate
+    \end{itemize}
+  \end{block}
+  \vspace{0.3cm}
+  \begin{block}{GLPI — Gestion de tickets automatique}
+    \begin{itemize}
+      \bitem Quand un événement \textbf{CRITICAL} est détecté $\rightarrow$ création automatique d'un ticket
+      \bitem Le ticket contient : type de menace, agent concerné, horodatage, hash du fichier
+      \bitem L'utilisateur voit le ticket dans son portail client en temps réel
+      \bitem OAuth2 pour l'authentification entre EDR et GLPI
+    \end{itemize}
+  \end{block}
+\end{frame}
+\note{
+  VirusTotal agrège les résultats de 70+ moteurs antivirus.
+  Si le fichier est déjà connu, VT répond en quelques secondes (cache).
+  GLPI = solution open-source de ticketing IT. On l'utilise comme back-office.
+  L'intégration est complète : détection $\rightarrow$ ticket $\rightarrow$ visible dans le portail.
+}
+
+% --- Slide 10 : EDR Server — Base de Données ---
+\begin{frame}{EDR Server — Persistance}
+  \textbf{PostgreSQL comme moteur principal}
+  \begin{itemize}
+    \bitem Choix : \textbf{PostgreSQL} pour la fiabilité, les performances et les fonctionnalités avancées
+    \bitem \textbf{Tables principales} :
+    \begin{itemize}
+      \bitem \texttt{agents} : hostname, OS, version, IP, last\_seen, statut (actif/silencieux/inactif)
+      \bitem \texttt{events} : type, sévérité (info/warning/critical), timestamp, agent concerné
+      \bitem \texttt{scans} : hash du fichier, score VirusTotal, statut (pending/done/error)
+    \end{itemize}
+    \bitem \textbf{SQLite} disponible en option pour déploiement léger (dev, tests)
+  \end{itemize}
+\end{frame}
+\note{
+  On utilise PostgreSQL en production car c'est plus robuste pour la concurrence et les données critiques.
+  SQLite est gardé pour le développement local — plus simple à setup.
+  Les schémas sont versionnés dans le dépôt Git.
+}
+
+% --- Slide 11 : EDR Agent ---
+\begin{frame}{EDR Agent — Architecture}
+  \textbf{Un agent Python compilé en binaire standalone}
+  \begin{itemize}
+    \bitem Compilation via \textbf{PyInstaller} : un seul binaire, pas de dépendance Python requise
+    \bitem Compatible \textbf{Linux, macOS, Windows}
+    \bitem Taille : $\sim$15 Mo, léger et non-intrusif
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Modules internes}
+  \begin{itemize}
+    \bitem \texttt{main.py} : orchestration, boucle principale
+    \bitem \texttt{heartbeat.py} : signal de vie toutes les 30s
+    \bitem \texttt{sender.py} : communication HTTP avec le serveur
+    \bitem \texttt{fim.py} : File Integrity Monitoring
+    \bitem \texttt{collector.py} : collecte des informations système
+    \bitem \texttt{hasher.py} : calcul de hash (SHA-256)
+    \bitem \texttt{reporter.py} : génération de rapports
+    \bitem \texttt{vt\_checker.py} : vérification VirusTotal
+  \end{itemize}
+\end{frame}
+\note{
+  L'agent est conçu pour être déployé facilement sur n'importe quel poste.
+  PyInstaller permet de livrer un binaire sans que l'utilisateur ait à installer Python.
+  Le binaire est signé et vérifié avant exécution.
+}
+
+% --- Slide 12 : EDR Agent — Fonctionnalités ---
+\begin{frame}{EDR Agent — Fonctionnalités Clés}
+  \begin{columns}[t]
+    \column{0.48\textwidth}
+    \textbf{Scan de fichiers}
+    \begin{itemize}
+      \bitem Analyse des processus en cours
+      \bitem Calcul de hash des fichiers suspects
+      \bitem Vérification réputation VirusTotal
+      \bitem Détection de connexions réseau anormales
+    \end{itemize}
+    \vspace{0.3cm}
+    \textbf{Mode monitor (daemon)}
+    \begin{itemize}
+      \bitem Fonctionne en continu en arrière-plan
+      \bitem Surveillance temps réel du système
+      \bitem Envoi heartbeat toutes les 30s
+    \end{itemize}
+    \column{0.48\textwidth}
+    \textbf{FIM — File Integrity Monitoring}
+    \begin{itemize}
+      \bitem Détecte les modifications de fichiers critiques (/etc/passwd, binaires systèmes)
+      \bitem Utilise SHA-256 pour vérifier l'intégrité
+      \bitem Alerte si un fichier surveillé est modifié
+    \end{itemize}
+    \vspace{0.3cm}
+    \textbf{Déploiement}
+    \begin{itemize}
+      \bitem \texttt{curl -sSL ... | sudo bash}
+      \bitem Auto-détection de l'OS et de l'architecture
+      \bitem Installation en $\sim$10 secondes
+      \bitem Auto-update via heartbeat
+    \end{itemize}
+  \end{columns}
+\end{frame}
+\note{
+  L'agent a deux modes : scan (une analyse ponctuelle) et monitor (surveillance continue).
+  Le FIM est particulièrement important pour la sécurité — il détecte si un attaquant modifie des fichiers système.
+  L'installation one-liner est conçue pour être la plus simple possible : une commande, pas de questions.
+}
+
+% --- Slide 13 : Communication Agent-Serveur ---
+\begin{frame}{Communication Agent $\leftrightarrow$ Serveur}
+  \begin{itemize}
+    \bitem \textbf{Protocole} : HTTP POST, payload JSON
+    \bitem \textbf{Authentification} : API key dans le header \texttt{X-API-Key}
+    \bitem \textbf{Payload} : type d'événement, données, horodatage, hash
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Cycle de vie d'un événement}
+  \begin{enumerate}
+    \item Agent détecte un fichier suspect $\rightarrow$ calcule le hash SHA-256
+    \item Envoie au serveur EDR via API REST
+    \item Serveur vérifie le hash : déjà vu ? connu de VirusTotal ?
+    \item Si nouveau : scan VirusTotal asynchrone
+    \item Résultat : bénin → ignoré / suspect → alerte / critique → ticket GLPI
+    \item Agent reçoit la réponse et agit (alerte locale, quarantaine)
+  \end{enumerate}
+\end{frame}
+\note{
+  La communication est simple mais efficace : HTTP REST avec JSON.
+  L'agent attend une réponse du serveur pour chaque événement :
+  - "OK" : événement enregistré
+  - "ALERT" : menace détectée, l'agent doit agir
+  - "QUARANTINE" : le fichier doit être mis en quarantaine
+}
+
+% ========================================================================
+% SECTION SOLTANE — Site Client
+% ========================================================================
+\section{Soltane — Site Client}
+
+% --- Slide 14 : Site Client Architecture ---
+\begin{frame}{Site Client — Architecture}
+  \textbf{Un portail web complet pour les clients LockBits}
+  \begin{itemize}
+    \bitem \textbf{PHP 8+} avec \textbf{Apache2} — stack classique, fiable, bien maîtrisée
+    \bitem \textbf{MySQL} pour la persistance des données clients
+    \bitem \textbf{Tailwind CSS} pour le frontend — design moderne sans framework lourd
+    \bitem \textbf{Dockerisé} : image GHCR, build multi-arch
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Fonctionnalités du portail}
+  \begin{itemize}
+    \bitem \textbf{Authentification} : inscription, connexion, profil
+    \bitem \textbf{Dashboard} : vue d'ensemble des alertes et de l'état de l'abonnement
+    \bitem \textbf{Tickets} : consultation et suivi des tickets GLPI
+    \bitem \textbf{Téléchargement} : accès au binaire de l'agent EDR
+    \bitem \textbf{Support} : accès au chatbot directement depuis le portail
+  \end{itemize}
+\end{frame}
+\note{
+  Le site est l'interface principale pour les clients de LockBits.
+  PHP a été choisi pour sa simplicité et la maîtrise de l'équipe — inutile de prendre un framework lourd.
+  Tailwind CSS permet de faire un design propre sans écrire de CSS personnalisé.
+}
+
+% --- Slide 15 : Site Client — Authentification & Base ---
+\begin{frame}{Site Client — Authentification \& Base de Données}
+  \textbf{Authentification sécurisée}
+  \begin{itemize}
+    \bitem Inscription avec email + mot de passe (haché en bcrypt)
+    \bitem Connexion sécurisée, session PHP, protection CSRF
+    \bitem Rôles : \textbf{client} (accès à ses données) / \textbf{admin} (gestion complète)
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Base MySQL}
+  \begin{itemize}
+    \bitem Table \texttt{clients} : nom, email, mot de passe (hashé), abonnement, date création
+    \bitem Table \texttt{tickets} : référence GLPI, titre, statut, priorité, date
+    \bitem Table \texttt{metrics} : connexions, téléchargements, actions
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Sécurité des données}
+  \begin{itemize}
+    \bitem Connexion BDD sécurisée, requêtes préparées (PDO)
+    \bitem Pas de mot de passe en clair, pas de données sensibles exposées
+    \bitem Validation des entrées côté serveur
+  \end{itemize}
+\end{frame}
+\note{
+  La sécurité est primordiale : mots de passe hachés avec bcrypt, requêtes préparées pour éviter les injections SQL.
+  Le site ne stocke que les données nécessaires : le reste est dans GLPI.
+  Les sessions PHP sont sécurisées avec des tokens CSRF.
+}
+
+% --- Slide 16 : Site Client — GLPI SSO ---
+\begin{frame}{Site Client — GLPI SSO \& Synchronisation}
+  \textbf{Intégration transparente avec GLPI}
+  \begin{itemize}
+    \bitem \textbf{OAuth2} : connexion SSO via GLPI
+    \bitem L'utilisateur se connecte au site avec son compte GLPI
+    \bitem Pas de double authentification — une seule session pour tout
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Synchronisation des tickets}
+  \begin{itemize}
+    \bitem Les tickets créés par l'EDR (événements critiques) sont visibles dans le portail
+    \bitem Synchronisation automatique : création, mise à jour, statut
+    \bitem Le client peut commenter ses tickets directement depuis le portail
+    \bitem Les commentaires sont synchronisés avec GLPI
+  \end{itemize}
+  \vspace{0.3cm}
+  \begin{exampleblock}{Parcours type}
+    Détection EDR $\rightarrow$ Ticket GLPI $\rightarrow$ Visible dans le portail $\rightarrow$ Le client suit l'incident en temps réel
+  \end{exampleblock}
+\end{frame}
+\note{
+  Le SSO simplifie l'expérience utilisateur : un seul compte pour GLPI et le portail.
+  Les tickets sont synchronisés en quasi-temps réel via l'API GLPI.
+  Le client n'a pas besoin d'accéder à GLPI directement — tout est dans le portail.
+}
+
+% --- Slide 17 : Site Client — Déploiement & Métriques ---
+\begin{frame}{Site Client — Déploiement \& Métriques}
+  \textbf{Déploiement automatisé}
+  \begin{itemize}
+    \bitem Pipeline CI/CD identique aux autres composants
+    \bitem Dockerisé : Dockerfile Apache + PHP
+    \bitem Déploiement via Dokploy (preprod puis prod)
+    \bitem \textbf{Backup MySQL automatisé} : script backup.sh, rotation 7 jours, upload sécurisé
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Métriques collectées}
+  \begin{itemize}
+    \bitem Nombre de connexions, inscriptions, téléchargements agent
+    \bitem Tickets créés, résolus, en attente
+    \bitem Temps de réponse, erreurs serveur
+    \bitem Statistiques d'utilisation (pages vues, actions)
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Déploiement physique}
+  \begin{itemize}
+    \bitem Hébergé dans un conteneur Docker sur le Proxmox
+    \bitem Accessible via \texttt{lockbits.pro} (tunnel Cloudflare)
+    \bitem Monitoring Prometheus + logs Loki
+  \end{itemize}
+\end{frame}
+\note{
+  Le site suit le même pipeline CI/CD que l'EDR — chaque push est testé, buildé, déployé.
+  Les backups MySQL sont essentiels : script automatisé avec rotation sur 7 jours.
+  Les métriques permettent de suivre l'adoption et l'utilisation du service.
+}
+
+% ========================================================================
+% SECTION QUENTIN — Chatbot & Conclusion
+% ========================================================================
+\section{Quentin — Chatbot \& Conclusion}
+
+% --- Slide 18 : Chatbot Architecture ---
+\begin{frame}{Chatbot — Architecture}
+  \textbf{Un assistant virtuel pour les clients LockBits}
+  \begin{itemize}
+    \bitem \textbf{Proxy PHP} vers l'API Claude (Anthropic)
+    \bitem Point d'entrée unique : \texttt{chat.php}
+    \bitem Intégré au site client via une fenêtre de chat dédiée
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Fonctionnalités}
+  \begin{itemize}
+    \bitem Répond aux questions sur LockBits : services, abonnement, utilisation
+    \bitem Aide au diagnostic : interprète les alertes EDR pour le client
+    \bitem Historique de conversation conservé pendant la session
+    \bitem Réponses en langage naturel grâce à Claude API
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Fonctionnement}
+  \begin{enumerate}
+    \item L'utilisateur envoie un message $\rightarrow$ PHP le valide et le nettoie
+    \item PHP forwarde la requête à Claude API avec un \textbf{system prompt} précis
+    \item Claude répond $\rightarrow$ PHP vérifie la réponse $\rightarrow$ l'affiche dans le chat
+  \end{enumerate}
+\end{frame}
+\note{
+  Le chatbot est conçu pour assister les clients sans solliciter l'équipe technique.
+  Il utilise Claude API d'Anthropic pour générer des réponses naturelles et pertinentes.
+  Le system prompt limite le chatbot au contexte LockBits — il ne répond pas à des questions hors-sujet.
+}
+
+% --- Slide 19 : Chatbot — Sécurité ---
+\begin{frame}{Chatbot — Sécurité \& Limitation}
+  \textbf{Protection contre les abus}
+  \begin{itemize}
+    \bitem \textbf{Rate limiting} : compteur quotidien par IP, stocké dans fichier JSON
+    \bitem Limite : \textbf{100 requêtes par jour} par utilisateur
+    \bitem Réinitialisation automatique chaque jour
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Sécurité des échanges}
+  \begin{itemize}
+    \bitem \textbf{Clé API Claude} stockée dans \texttt{.env} — jamais exposée au frontend
+    \bitem \textbf{Validation des entrées} : pas de code exécutable, pas d'injection
+    \bitem \textbf{System prompt verrouillé} : le chatbot ne répond que sur le périmètre LockBits
+    \bitem \textbf{Aucune donnée sensible} transmise à Claude (les messages sont anonymisés)
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Déploiement}
+  \begin{itemize}
+    \bitem Fichier unique \texttt{chat.php}, léger et rapide
+    \bitem Dockerisé avec le site client (même conteneur)
+    \bitem Accessible via \texttt{chat.lockbits.pro}
+  \end{itemize}
+\end{frame}
+\note{
+  Le rate limiting est important pour éviter les abus et maîtriser les coûts de l'API Claude.
+  Le system prompt est conçu pour que le chatbot reste dans son rôle : assistant LockBits.
+  Aucune donnée personnelle ou sensible n'est envoyée à Claude — les messages sont anonymisés côté PHP.
+}
+
+% --- Slide 20 : Résultats ---
+\begin{frame}{Résultats \& Services en Ligne}
+  \begin{exampleblock}{Services accessibles publiquement}
+    \centering
+    \begin{tabular}{@{}ll@{}}
+      \toprule
+      \textbf{Service} & \textbf{URL} \\
+      \midrule
+      Portail client & \texttt{https://lockbits.pro} \\
+      API EDR & \texttt{https://edr.lockbits.pro} \\
+      Pré-production EDR & \texttt{https://preprod-edr.lockbits.pro} \\
+      Chatbot & \texttt{https://chat.lockbits.pro} \\
+      \bottomrule
+    \end{tabular}
+  \end{exampleblock}
+  \vspace{0.3cm}
+  \textbf{Chiffres clés}
+  \begin{itemize}
+    \bitem \textbf{Pipeline CI} : verte en permanence, chaque PR testée avant merge
+    \bitem \textbf{Déploiement} : \textasciitilde5 minutes du push à la production
+    \bitem \textbf{Agent EDR} : installation one-liner, compatible Linux/macOS/Windows
+    \bitem \textbf{Code} : 100\% open-source sur \texttt{github.com/Lockbits-ESGI}
+  \end{itemize}
+\end{frame}
+\note{
+  Tous les services sont en ligne et accessibles publiquement.
+  La pipeline CI est verte : chaque commit est testé et déployé automatiquement.
+  On peut montrer les URLs en direct si la connexion fonctionne.
+  Le code est open-source — le jury technique peut vérifier.
+}
+
+% --- Slide 21 : Roadmap ---
+\begin{frame}{Roadmap \& Évolutions}
+  \textbf{Court terme (post-MVP)}
+  \begin{itemize}
+    \bitem Tests unitaires : viser \textbf{80\% de coverage} sur l'EDR
+    \bitem Correction des tickets GLPI (priorisation, escalation)
+    \bitem Dashboard Grafana automatisé par composant
+    \bitem Backup MySQL automatisé et vérifié
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Moyen terme}
+  \begin{itemize}
+    \bitem \textbf{Kubernetes (K3s)} : orchestration complète si le projet passe à l'échelle
+    \bitem \textbf{OAuth2} : connexion Google/Microsoft en plus de GLPI
+    \bitem \textbf{IPv6} : support du double stack
+  \end{itemize}
+  \vspace{0.3cm}
+  \textbf{Long terme}
+  \begin{itemize}
+    \bitem \textbf{SIEM} (Wazuh / ELK) : corrélation d'événements, règles de détection avancées
+    \bitem \textbf{Interface admin web EDR} : gestion des agents, alertes, rapports
+    \bitem \textbf{Tests de pénétration automatisés} : OWASP ZAP, analyse de dépendances
+  \end{itemize}
+\end{frame}
+\note{
+  La roadmap est réaliste : on priorise ce qui apporte le plus de valeur.
+  Kubernetes est une évolution possible mais pas nécessaire aujourd'hui — Docker Compose suffit pour 4 conteneurs.
+  Le SIEM serait la prochaine étape logique pour un EDR : corréler les événements entre plusieurs sources.
+}
+
+% --- Slide 22 : Merci ---
 \begin{frame}{Merci}
-  \vspace{2em}
-  \centering
-  {\Large Des questions ?}
-
   \vspace{1.5em}
-  \rule{0.4\textwidth}{0.5pt}
-
+  \centering
+  {\Huge\color{primaryblue} Des questions ?}
   \vspace{1em}
-  \url{https://github.com/Lockbits-ESGI}
-
+  \rule{0.5\textwidth}{0.5pt}
+  \vspace{1.5em}
+  {\Large\url{https://github.com/Lockbits-ESGI}}
   \vspace{0.5em}
+  \begin{itemize}
+    \bitem Dossier d'architecture complet en LaTeX : \texttt{docs/latex/}
+    \bitem Présentation : \texttt{docs/latex/presentation.tex}
+    \bitem Code source : \texttt{github.com/Lockbits-ESGI/main}
+  \end{itemize}
+  \vspace{1em}
   \small\textit{LockBits — EDR Open-Source \& Portail Client — ESGI 2025-2026}
 \end{frame}
+\note{
+  Remercier le jury. Proposer de faire une démo en direct si le temps le permet.
+  Insister sur le fait que tout le code est open-source et vérifiable.
+  Laisser la place aux questions — chaque membre de l'équipe répond sur son domaine.
+}
 
 \end{document}
