@@ -1,0 +1,3 @@
+$ php -l site_lockbits/metrics.php
+No syntax errors detected in site_lockbits/metrics.php
+No syntax errors detected in /code/site_lockbits/metrics.php

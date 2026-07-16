@@ -1,0 +1,2 @@
+35:RUN date +%s > /var/www/html/.lockbits_start
+---

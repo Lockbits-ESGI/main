@@ -1,0 +1,100 @@
+% =============================================================================
+% main.tex — Document racine du Dossier d'Architecture LockBits
+% Projet Annuel ESGI 2025-2026
+% =============================================================================
+
+% --- Préambule (packages, commandes, styles) ---
+\input{preamble}
+
+% =============================================================================
+\begin{document}
+% =============================================================================
+
+% ---------------------------------------------------------------------------
+% Page de titre
+% ---------------------------------------------------------------------------
+\begin{titlepage}
+  \centering
+
+  \vspace*{2cm}
+
+  {\Huge\bfseries\color{primaryblue} Dossier d'Architecture\\[0.3em]
+                              Système d'Information}
+
+  \vspace{1cm}
+
+  \rule{\textwidth}{1pt}
+
+  \vspace{1cm}
+
+  {\LARGE\bfseries Projet LockBits\\[0.4em]
+   \large EDR Open-Source \& Portail Client}
+
+  \vspace{2cm}
+
+  \begin{minipage}{0.6\textwidth}
+    \centering
+    \large
+    \textbf{Équipe Projet}\\[0.5em]
+    Cléry A-Ferradou \textit{(Chef de Projet)}\\[0.3em]
+    Swann Kechar\\[0.3em]
+    Soltane Afellah\\[0.3em]
+    Quentin Labourdette
+  \end{minipage}
+
+  \vfill
+
+  \rule{\textwidth}{1pt}
+
+  \vspace{0.5cm}
+
+  {\large ESGI -- 2\textsuperscript{e} année\\[0.2em]
+   Projet Annuel 2025--2026}
+
+  \vspace{0.3cm}
+
+  {\large Version 1.0}
+
+\end{titlepage}
+
+% ---------------------------------------------------------------------------
+% Table des matières
+% ---------------------------------------------------------------------------
+\tableofcontents
+\newpage
+
+% ---------------------------------------------------------------------------
+% Chapitres
+% ---------------------------------------------------------------------------
+
+% Chapitre 1 — Introduction
+% Présentation du projet LockBits, objectifs, périmètre, glossaire
+\include{chapters/01-introduction}
+
+% Chapitre 2 — Architecture globale
+% Vue d'ensemble, diagramme de contexte, principes architecturaux, flux
+\include{chapters/02-architecture-globale}
+
+% Chapitre 3 — Composants applicatifs
+% Description détaillée de chaque composant : EDR Server, Agent, Portail Client, GLPI, Chatbot
+\include{chapters/03-composants-applicatifs}
+
+% Chapitre 4 — Infrastructure et déploiement
+% Docker Compose, réseau, volumes, CI/CD, monitoring
+\include{chapters/04-infrastructure-déploiement}
+
+% Chapitre 5 — Gouvernance
+% Git workflow, normes de développement, tests, documentation
+\include{chapters/05-gouvernance}
+
+% Chapitre 6 — Extensions
+% Pistes d'évolution, améliorations futures, Roadmap
+\include{chapters/06-extensions}
+
+% Chapitre 7 — Annexes
+% Références techniques, schémas complémentaires, configurations types
+\include{chapters/07-annexes}
+
+% =============================================================================
+\end{document}
+% =============================================================================

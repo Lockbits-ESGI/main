@@ -1,0 +1,6 @@
+  site-web:
+    image: ghcr.io/lockbits-esgi/site_lockbits:develop
+    container_name: lockbits_web_preprod
+    pull_policy: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

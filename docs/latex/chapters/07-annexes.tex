@@ -1,0 +1,261 @@
+% ==============================================================================
+% Chapitre 7 : Annexes
+% Ports et protocoles, commandes maintenance, glossaire, références
+% ==============================================================================
+
+\chapter{Annexes}
+
+\section{Référence des ports et protocoles}
+
+Le tableau~\ref{tab:ports-protocoles} récapitule l'ensemble des ports et
+protocoles utilisés par les différents composants de l'infrastructure
+LockBits. Il distingue trois réseaux logiques~: le réseau \texttt{frontend}
+(services exposés), le réseau \texttt{backend} (services internes) et le
+réseau \texttt{monitoring} (supervision).
+
+\begin{table}[htbp]
+  \centering
+  \caption{Référence des ports et protocoles}
+  \label{tab:ports-protocoles}
+  \begin{tabular}{llllp{5cm}}
+    \toprule
+    \textbf{Service} & \textbf{Port} & \textbf{Protocole} & \textbf{Réseau} & \textbf{Description} \\
+    \midrule
+    EDR Server       & 8001 & HTTP/TCP   & frontend   & API REST FastAPI \\
+    Site Web         & 8080 & HTTP/TCP   & frontend   & Site PHP/Apache \\
+    MySQL            & 3306 & MySQL/TCP  & backend    & Base de données du site \\
+    Prometheus       & 9090 & HTTP/TCP   & monitoring & Métriques système \\
+    Grafana          & 3000 & HTTP/TCP   & monitoring & Dashboards de visualisation \\
+    Alloy            & --   & gRPC/HTTP  & monitoring & Collecte et acheminement des logs \\
+    VirusTotal       & 443  & HTTPS      & externe     & API d'analyse de fichiers \\
+    Claude API       & 443  & HTTPS      & externe     & API du chatbot intelligent \\
+    GLPI             & 443  & HTTPS      & externe     & API de gestion de tickets \\
+    GHCR             & 443  & HTTPS      & externe     & Registry Docker GitHub \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Les services exposés sur le réseau \texttt{frontend} sont accessibles depuis
+l'extérieur via les ports configurés dans le fichier \texttt{.env}. Les
+services internes (\texttt{backend}) ne sont accessibles qu'entre conteneurs
+Docker, ce qui limite la surface d'attaque. Le réseau \texttt{monitoring}
+reste isolé du trafic applicatif.
+
+\section{Commandes de maintenance courantes}
+
+Cette section regroupe les commandes essentielles pour l'administration
+quotidienne de l'infrastructure LockBits.
+
+\subsection{Administration Docker}
+
+La stack LockBits est déployée via Docker Compose. Les commandes suivantes
+permettent de gérer l'état des services~:
+
+\begin{lstlisting}[language=dockerbash, caption=Voir l'état des services]
+docker compose -f docker-compose.prod.yml ps
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Consulter les logs en temps réel]
+docker compose -f docker-compose.prod.yml logs -f
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Redémarrer un service spécifique]
+docker compose -f docker-compose.prod.yml restart edr-server
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Mettre à jour tous les services]
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Sauvegarder la base MySQL]
+docker exec lockbits_db mysqldump -u lockbits -p lockbits_client > backup.sql
+\end{lstlisting}
+
+\subsection{Installation et mise à jour (one-liner)}
+
+Le script \texttt{install.sh} centralise le déploiement et les mises à jour
+de la stack. Il est exécutable en une seule commande~:
+
+\begin{lstlisting}[language=dockerbash, caption=Installation complète de la stack]
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Mise à jour de la stack]
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --update
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Activer la mise à jour automatique (cron)]
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install.sh | bash -s -- --cron
+\end{lstlisting}
+
+\subsection{Gestion des sous-modules Git}
+
+Le dépôt principal LockBits orchestre ses composants via des sous-modules
+Git. Les commandes suivantes permettent de les maintenir à jour~:
+
+\begin{lstlisting}[language=dockerbash, caption=Cloner le projet avec les sous-modules]
+git clone --recurse-submodules git@github.com:Lockbits-ESGI/main.git
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Mettre à jour les sous-modules et publier]
+git submodule update --remote
+git add -u
+git commit -m "update submodules"
+git push
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Mise à jour via le script dédié]
+bash install.sh --update-sources
+\end{lstlisting}
+
+\subsection{Agent EDR}
+
+L'agent de sécurité LockBits s'installe sur les machines Linux à protéger~:
+
+\begin{lstlisting}[language=dockerbash, caption=Installation en mode binaire]
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
+  SERVER_URL=https://edr.lockbits.pro AUTH_TOKEN=token bash
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Installation en mode Docker]
+curl -fsSL https://raw.githubusercontent.com/Lockbits-ESGI/main/main/install-agent.sh | \
+  SERVER_URL=https://edr.lockbits.pro AUTH_TOKEN=token bash -s -- --mode docker
+\end{lstlisting}
+
+\begin{lstlisting}[language=dockerbash, caption=Désinstallation de l'agent]
+sudo /opt/lockbits-agent/lockbits-agent --uninstall
+\end{lstlisting}
+
+\section{Glossaire technique}
+
+Le glossaire ci-dessous définit les principaux termes techniques utilisés
+dans ce dossier d'architecture.
+
+\begin{longtable}{lp{10cm}}
+  \caption{Glossaire technique}
+  \label{tab:glossaire} \\
+  \toprule
+  \textbf{Terme} & \textbf{Définition} \\
+  \midrule
+  \endfirsthead
+
+  \caption{Glossaire technique (suite)} \\
+  \toprule
+  \textbf{Terme} & \textbf{Définition} \\
+  \midrule
+  \endhead
+
+  \midrule
+  \multicolumn{2}{r}{\small\textit{Suite sur la page suivante}} \\
+  \endfoot
+
+  \bottomrule
+  \endlastfoot
+
+  \textbf{EDR}
+  & Endpoint Détection \& Response~--~solution de détection et réponse sur
+  les terminaux. \\
+
+  \textbf{FIM}
+  & File Integrity Monitoring~--~surveillance de l'intégrité des fichiers
+  du système. \\
+
+  \textbf{SIEM}
+  & Security Information and Event Management~--~gestion des événements et
+  informations de sécurité. \\
+
+  \textbf{IaC}
+  & Infrastructure as Code~--~gestion et provisionnement de
+  l'infrastructure via du code versionné. \\
+
+  \textbf{GHCR}
+  & GitHub Container Registry~--~registre de conteneurs intégré à GitHub. \\
+
+  \textbf{CI/CD}
+  & Continuous Integration / Continuous Deployment~--~intégration et
+  déploiement continus. \\
+
+  \textbf{Cloudflare Zero Trust}
+  & Plateforme de sécurité réseau cloud qui fournit un accès sécurisé
+  via tunnel cloudflared. \\
+
+  \textbf{MVP}
+  & Minimum Viable Product~--~produit minimum viable, première version
+  fonctionnelle d'un logiciel. \\
+
+  \textbf{HA}
+  & Haute Disponibilité~--~capacité d'un système à rester opérationnel
+  malgré des défaillances. \\
+
+  \textbf{SLA}
+  & Service Level Agreement~--~accord définissant le niveau de service
+  attendu entre un fournisseur et un client. \\
+
+  \textbf{SOC}
+  & Security Operations Center~--~centre opérationnel de sécurité
+  supervisant les infrastructures. \\
+
+  \textbf{OAuth2}
+  & Protocole d'authentification déléguée permettant l'accès sécurisé à
+  des ressources sans partage de mot de passe. \\
+
+  \textbf{REST}
+  & Representational State Transfer~--~style d'architecture API basé sur
+  les verbes HTTP. \\
+
+  \textbf{FastAPI}
+  & Framework Python moderne pour la construction d'API asynchrones,
+  utilisé pour le serveur EDR. \\
+
+  \textbf{PyInstaller}
+  & Outil de compilation permettant de transformer un programme Python en
+  binaire exécutable autonome. \\
+
+  \textbf{Trivy}
+  & Scanner de vulnérabilités open-source spécialisé dans l'analyse
+  d'images conteneurisées. \\
+
+  \textbf{Dokploy}
+  & Plateforme de déploiement automatisé pour applications
+  conteneurisées, déclenchée par webhook GitHub Actions. \\
+
+  \textbf{Alloy}
+  & Agent de collecte et d'acheminement de logs de la stack Grafana
+  (anciennement Grafana Agent). \\
+
+  \textbf{STIX}
+  & Structured Threat Information eXpression~--~format standardisé
+  d'échange de données de menace. \\
+
+\end{longtable}
+
+\section{Références bibliographiques}
+
+Les ressources suivantes ont été consultées pour la conception et la
+rédaction de ce dossier d'architecture.
+
+\subsection*{Documentations officielles}
+
+\begin{itemize}
+  \item Documentation FastAPI~: \url{https://fastapi.tiangolo.com/}
+  \item Documentation Docker Compose~: \url{https://docs.docker.com/compose/}
+  \item Documentation GitHub Actions~: \url{https://docs.github.com/en/actions}
+  \item Prometheus~: \url{https://prometheus.io/docs/}
+  \item Grafana~: \url{https://grafana.com/docs/}
+\end{itemize}
+
+\subsection*{API et services externes}
+
+\begin{itemize}
+  \item Claude API (Anthropic)~: \url{https://docs.anthropic.com/}
+  \item VirusTotal API~: \url{https://developers.virustotal.com/}
+  \item GLPI API~: \url{https://glpi-project.org/}
+\end{itemize}
+
+\subsection*{Dépôts et organisation}
+
+\begin{itemize}
+  \item Organisation GitHub LockBits~: \url{https://github.com/Lockbits-ESGI}
+  \item Registre GHCR LockBits~: \url{https://ghcr.io/lockbits-esgi}
+\end{itemize}

@@ -1,0 +1,5 @@
+Task: T10 — smoke_site.py syntax validation
+Command: python3 -c "import py_compile; py_compile.compile('tests/smoke_site.py', doraise=True); print('VALID')"
+
+Result: VALID
+VERDICT: ✅ PASS

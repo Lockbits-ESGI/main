@@ -1,0 +1,9 @@
+Task: T2 — Dockerfile .lockbits_start marker
+Command: grep -n "lockbits_start" site_lockbits/Dockerfile
+
+Result (line 35):
+35:RUN date +%s > /var/www/html/.lockbits_start
+
+Position check: After "COPY . /var/www/html/" (line 32), Before "RUN chown -R www-data:www-data" (line 38)
+✅ Line is between COPY and chown as specified.
+VERDICT: ✅ PASS

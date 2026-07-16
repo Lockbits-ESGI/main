@@ -1,0 +1,283 @@
+% ==============================================================================
+% Chapitre 5 : Gouvernance et Gestion de Projet
+% Organisation équipe, méthodologie, risques, plan de déploiement, jalons
+% ==============================================================================
+
+\chapter{Gouvernance et Gestion de Projet}
+
+\section{Organisation de l'\'equipe}
+
+L'\'equipe du projet LockBits est compos\'ee de quatre \'etudiants de
+l'\textbf{ESGI}, chacun occupant un r\^ole sp\'ecifique qui refl\`ete \`a
+la fois les comp\'etences individuelles et les besoins du projet. La
+r\'epartition des responsabilit\'es suit une logique de compl\'ementarit\'e~:
+les domaines techniques sont attribu\'es selon l'expertise de chacun,
+tandis que la coordination g\'en\'erale et l'infrastructure DevOps sont
+confi\'ees \`a un membre unique pour garantir la coh\'erence de
+l'ensemble.
+
+Cette organisation vise \`a maximiser l'autonomie de chaque d\'eveloppeur
+sur son p\'erim\`être tout en maintenant une vision d'ensemble partag\'ee
+par l'\'equipe. Les choix architecturaux et les points de convergence
+entre les composants sont discut\'es coll\'egialement lors des r\'eunions
+hebdomadaires.
+
+\subsection{R\^oles et responsabilit\'es}
+
+Le tableau~\ref{tab:rôles} pr\'esente la r\'epartition des r\^oles au
+sein de l'\'equipe.
+
+\begin{table}[h]
+  \centering
+  \caption{R\'epartition des r\^oles et responsabilit\'es}
+  \label{tab:rôles}
+  \begin{tabular}{@{}llp{7cm}@{}}
+    \toprule
+    \textbf{R\^ole} & \textbf{Personne} & \textbf{Responsabilit\'es} \\
+    \midrule
+    Chef de Projet / DevOps
+      & Cl\'ery A.-Ferradou
+      & Coordination \'equipe, CI/CD, Docker, monitoring,
+        scripts d\'eploiement, gestion des risques \\
+    D\'eveloppeur EDR
+      & Swann Kechar
+      & Serveur FastAPI, agent Python, FIM, int\'egration
+        VirusTotal/GLPI, compilation PyInstaller \\
+    D\'eveloppeur Site
+      & Soltane Afellah
+      & Site PHP/Apache, MySQL, GLPI SSO, dashboard client \\
+    D\'eveloppeur Chatbot
+      & Quentin Labourdette
+      & Int\'egration API Claude, interface chat,
+        rate limiting \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{R\'epartition des composants}
+
+Chaque membre de l'\'equipe est responsable d'un ensemble de composants
+et de fichiers sp\'ecifiques, d\'efinis dans les d\'ep\^ots Git
+correspondants.
+
+\textbf{Cl\'ery A.-Ferradou}~: Chef de Projet et DevOps, il assure la
+coh\'erence de l'infrastructure. Son p\'erim\`être couvre
+l'orchestration Docker (fichiers \texttt{docker-compose.yml},
+\texttt{Dockerfiles}), la pipeline CI/CD (fichier
+\texttt{build-and-push.yml} GitHub Actions), le monitoring
+(Prometheus, Grafana, Loki) et les scripts de d\'eploiement
+(\texttt{install.sh}, \texttt{backup.sh}). Il coordonne \'egalement
+les sprints et la gestion des risques.
+
+\textbf{Swann Kechar}~: D\'eveloppeur EDR, il travaille sur le c\^ocur
+du produit. Il est responsable du serveur FastAPI (dossier
+\texttt{edr/server/}), de l'agent Python (dossier \texttt{edr/agent/}),
+de la surveillance des fichiers (FIM), de l'int\'egration avec
+VirusTotal et GLPI, et de l'empaquetage via PyInstaller.
+
+\textbf{Soltane Afellah}~: D\'eveloppeur web, il con\c{c}oit et
+d\'eveloppe l'ensemble du site client (dossier
+\texttt{site\_lockbits/}) en PHP, HTML, CSS et JavaScript, incluant le
+sch\'ema de base de donn\'ees MySQL et l'int\'egration du SSO GLPI.
+
+\textbf{Quentin Labourdette}~: D\'eveloppeur chatbot, il impl\'emente
+l'assistant virtuel int\'egr\'e au site. Son travail porte sur le
+fichier \texttt{chat.php}, l'interface de chat, l'API Claude
+d'Anthropic et le m\'ecanisme de rate limiting.
+
+\section{M\'ethodologie de travail}
+
+\subsection{Approche Agile adapt\'ee}
+
+L'\'equipe a adopt\'e une m\'ethodologie Agile adapt\'ee au contexte
+acad\'emique et \`a la taille r\'eduite de l'\'equipe. Le cadre de
+travail s'inspire de \textbf{Scrum} sans en appliquer tous les
+artefacts, afin de rester l\'eger et efficace.
+
+Les \'el\'ements cl\'es de cette m\'ethodologie sont~:
+
+\begin{itemize}
+  \item \textbf{Sprints de deux semaines}~: chaque sprint produit un
+    incr\'ement fonctionnel du produit. La dur\'ee de deux semaines
+    offre un \'equilibre entre la charge de planification et la
+    visibilit\'e sur l'avancement.
+  \item \textbf{Daily standups trois fois par semaine}~: les lundis,
+    mercredis et vendredis, l'\'equipe se retrouve pour un point de 15
+    minutes sur l'avancement et les blocages \'eventuels. Ce rythme
+    permet de maintenir une dynamique sans alourdir l'emploi du temps.
+  \item \textbf{Sprint review en fin de sprint}~: \`a l'issue de chaque
+    sprint, l'\'equipe pr\'esente les fonctionnalit\'es livr\'ees et
+    recueille les retours.
+  \item \textbf{R\'etrospective}~: la r\'etrospective conclut chaque
+    sprint en identifiant les axes d'am\'elioration du fonctionnement
+    de l'\'equipe.
+  \item \textbf{Backlog g\'er\'e via GitHub Projects}~: les t\^aches
+    sont prioris\'ees et suivies dans un tableau Kanban int\'egr\'e \`a
+    GitHub, offrant une visibilit\'e partag\'ee sur l'avancement.
+\end{itemize}
+
+\subsection{Rituels}
+
+Les rituels de l'\'equipe sont organis\'es selon un calendrier
+pr\'evisible qui structure la vie du projet.
+
+\begin{description}
+  \item[Daily]~: point de 15 minutes, trois fois par semaine. Chaque
+    membre r\'epond \`a trois questions~: qu'ai-je fait depuis le
+    dernier daily~? que vais-je faire aujourd'hui~? quels sont mes
+    blocages~?
+  \item[Sprint planning]~: r\'eunion en d\'ebut de sprint pour
+    d\'efinir les objectifs, s\'electionner les t\^aches du backlog et
+    les affecter aux membres de l'\'equipe.
+  \item[Sprint review]~: d\'emonstration des fonctionnalit\'es
+    livr\'ees, suivie d'une discussion sur les \'ecarts \'eventuels
+    entre les objectifs planifi\'es et le r\'ealis\'e.
+  \item[R\'etrospective]~: moment d'\'echange sur le d\'eroulement du
+    sprint, visant \`a am\'eliorer en continu les pratiques de
+    l'\'equipe.
+\end{description}
+
+\subsection{Outils collaboratifs}
+
+L'\'equipe utilise un ensemble d'outils collaboratifs couvrant
+l'ensemble des besoins du projet.
+
+\begin{itemize}
+  \item \textbf{GitHub}~: plateforme centrale du projet. Elle h\'eberge
+    le code source, les issues, les pull requests, les discussions de
+    code review et le tableau de bord de projet (GitHub Projects).
+  \item \textbf{Discord}~: outil de communication quotidienne pour les
+    \'echanges rapides, le partage d'\'écran et l'organisation
+    informelle.
+  \item \textbf{Git}~: gestion de versions d\'ecentralis\'ee avec un
+    workflow trunk-based. Les branches de fonctionnalit\'es sont
+    cr\'e\'ees \`a partir de \texttt{main}, puis fusionn\'ees apr\`es
+    validation via pull request.
+  \item \textbf{Code review syst\'ematique}~: toute modification est
+    soumise \`a une revue par au moins un autre membre de l'\'equipe
+    avant d'\^être int\'egr\'ee. Cette pratique garantit la qualit\'e
+    du code et la diffusion des connaissances.
+\end{itemize}
+
+\section{Gestion des risques}
+
+La gestion des risques est un aspect essentiel de la conduite du
+projet. L'\'equipe a identifi\'e les risques principaux, \'evalu\'e
+leur probabilit\'e et leur impact, et d\'efini des mesures de
+mitigation. Le tableau~\ref{tab:risques} r\'esume cette analyse.
+
+\begin{table}[h]
+  \centering
+  \caption{Analyse des risques du projet}
+  \label{tab:risques}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Risque}
+      & \textbf{Prob.}
+      & \textbf{Impact}
+      & \textbf{Mitigation} \\
+    \midrule
+    Indisponibilit\'e API externe (VT, Claude)
+      & Moyenne
+      & \'Elev\'e
+      & D\'egradation gracieuse, fallback, cache \\
+    Probl\`emes de compatibilit\'e multi-arch
+      & Faible
+      & Moyen
+      & Tests CI sur les deux architectures \\
+    D\'erive de planning
+      & Moyenne
+      & \'Elev\'e
+      & Sprints courts, priorisation MVP \\
+    S\'ecurit\'e des donn\'ees clients
+      & Faible
+      & Critique
+      & Isolation r\'eseau, secrets, .env \\
+    Mont\'ee en comp\'etence (Docker, CI/CD)
+      & Moyenne
+      & Moyen
+      & Documentation, POCs, pair programming \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Chaque risque fait l'objet d'un suivi r\'egulier pendant les sprints.
+Les mesures de mitigation sont ajust\'ees si la probabilit\'e ou
+l'impact \'evolue au cours du projet.
+
+\section{Plan de d\'eploiement en phases}
+
+Le projet LockBits est d\'ecompos\'e en six phases, chacune produisant
+des livrables concrets. Ce phasage permet de r\'eduire les risques
+d'int\'egration en validant chaque \'etape avant de passer \`a la
+suivante.
+
+\subsection{Phase 0~: Initialisation (Semaines 1--2)}
+
+La phase d'initialisation pose les fondations du projet. Elle comprend
+la mise en place du d\'ep\^ot GitHub principal avec ses
+sous-modules (EDR, site), la configuration initiale de la pipeline
+CI/CD, la cr\'eation des environnements de d\'eveloppement Docker, et
+la d\'efinition des conventions de code et de commit.
+
+\subsection{Phase 1~: Core EDR (Semaines 3--6)}
+
+Cette phase est consacr\'ee au d\'eveloppement du c\^ocur du produit
+EDR. Le serveur FastAPI est d\'evelopp\'e avec son API REST et sa base
+SQLite. L'agent Python est cr\'e\'e avec les fonctionnalit\'es de scan,
+de monitoring et de FIM. L'int\'egration VirusTotal est mise en place,
+et les premiers tests unitaires sont \'écrits.
+
+\subsection{Phase 2~: Site client (Semaines 7--10)}
+
+Le portail client est d\'evelopp\'e durant cette phase. Le site
+PHP/Apache est construit avec sa base de donn\'ees MySQL, le syst\`eme
+d'authentification, le tableau de bord client et l'int\'egration GLPI
+via SSO.
+
+\subsection{Phase 3~: Chatbot (Semaines 11--12)}
+
+Le chatbot est int\'egr\'e au site client. Cette phase inclut la
+connexion \`a l'API Claude d'Anthropic, le d\'eveloppement de
+l'interface de chat, la mise en place du rate limiting et les mesures
+de s\'ecurit\'e associ\'ees.
+
+\subsection{Phase 4~: CI/CD et d\'eploiement (Semaines 13--15)}
+
+La pipeline CI/CD est finalis\'ee avec l'ensemble des \'etapes~: lint,
+test, build multi-architecture, scan de s\'ecurit\'e et push vers
+GHCR. Le script d'installation one-liner (\texttt{install.sh}) est
+d\'evelopp\'e et test\'e. La documentation de d\'eploiement est
+r\'edig\'ee.
+
+\subsection{Phase 5~: Monitoring et s\'ecurit\'e (Semaines 16--18)}
+
+La derni\`ere phase renforce la robustesse du syst\`eme. Prometheus,
+Grafana et Loki sont d\'eploy\'es pour le monitoring. Les scans de
+vuln\'erabilit\'es Trivy sont int\'egr\'es au pipeline. Le hardening
+de la configuration est r\'ealis\'e et la documentation de s\'ecurit\'e
+est finalis\'ee.
+
+\section{Crit\`eres de succ\`es (MVP)}
+
+Le Minimum Viable Product (MVP) est valid\'e lorsque les six crit\`eres
+suivants sont atteints~:
+
+\begin{enumerate}
+  \item \textbf{Serveur EDR op\'erationnel} avec API REST document\'ee
+    accessible via \texttt{/docs} (Swagger UI).
+  \item \textbf{Agent EDR fonctionnel} capable de scan et de monitoring
+    en temps r\'eel sur les endpoints.
+  \item \textbf{Site client d\'eploy\'e} avec authentification, tableau
+    de bord et gestion des clients.
+  \item \textbf{Chatbot op\'erationnel} int\'egr\'e au site avec rate
+    limiting fonctionnel.
+  \item \textbf{Pipeline CI/CD verte} ex\'ecutant l'encha\^inement
+    complète~: lint, test, build, push.
+  \item \textbf{Installation en une commande} via le script
+    \texttt{install.sh} utilisant \texttt{curl}.
+\end{enumerate}
+
+Ces crit\`eres garantissent que la solution est utilisable en
+condition r\'eelle et peut \^être d\'eploy\'ee par un client sans
+intervention de l'\'equipe de d\'eveloppement.

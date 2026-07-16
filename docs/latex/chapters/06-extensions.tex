@@ -1,0 +1,250 @@
+% ==============================================================================
+% Chapitre 6 : Extensions et Évolutions Futures
+% Roadmap post-projet, évolutions potentielles, améliorations continues
+% ==============================================================================
+
+\chapter{Extensions et Évolutions Futures}
+\label{ch:extensions}
+
+\section{Roadmap post-projet}
+
+Le projet LockBits a livré une version fonctionnelle complète (v1.0.0) qui
+couvre les besoins essentiels~: serveur EDR avec analyse de fichiers,
+agent déployable, portail client, pipeline CI/CD et infrastructure de
+monitoring. Cette section présente la roadmap post-MVP, c'est-à-dire les
+axes d'amélioration identifiés pour renforcer la robustesse, la
+couverture fonctionnelle et la qualité du logiciel.
+
+\subsection{Court terme (post-MVP)}
+
+Les priorités à court terme concernent les correctifs et les
+améliorations de qualité identifiés durant le développement de la
+version initiale~:
+
+\begin{enumerate}
+  \item \textbf{Correction du bug de création de ticket GLPI}~: un
+    dysfonctionnement dans l'appel API GLPI côté site client empêche la
+    création de tickets de support. Ce bug bloque une fonctionnalité
+    métier importante et doit être résolu en priorité.
+  \item \textbf{Amélioration de la couverture de tests unitaires}~:
+    l'objectif est d'atteindre 80~\% de couverture de code pour le
+    serveur EDR. Une couverture élevée réduit le risque de régressions
+    et facilite les évolutions futures.
+  \item \textbf{Tests d'intégration pour le site client}~: des tests
+    automatisés spécifiques au portail PHP doivent être ajoutés,
+    couvrant les scénarios d'authentification, de consultation du
+    tableau de bord et d'interaction avec l'API EDR.
+  \item \textbf{Backup automatisé de la base MySQL}~: un script de
+    sauvegarde avec rotation doit être mis en place pour la base de
+    données du portail client. La politique de rétention prévoit la
+    conservation des sept derniers snapshots quotidiens et des quatre
+    dernières sauvegardes hebdomadaires.
+  \item \textbf{Configuration Dokploy finalisée}~: s'assurer que la configuration
+      Dokploy couvre tous les environnements (prod et preprod) de manière robuste.
+\end{enumerate}
+
+\subsection{Moyen terme}
+
+Les améliorations à moyen terme visent à renforcer la supervision,
+l'accessibilité et la fiabilité de la plateforme~:
+
+\begin{enumerate}
+  \item \textbf{Alerting Prometheus}~: la configuration des alertes
+    Prometheus doit être enrichie avec des webhooks vers Discord et par
+    email. Les administrateurs seront notifiés en cas de dysfonctionnement
+    d'un service, de saturation d'un disque ou d'absence prolongée d'un
+    agent EDR.
+  \item \textbf{Support IPv6}~: la stack Docker doit supporter
+    l'adressage IPv6 en complément de l'IPv4. Cette évolution est
+    nécessaire pour garantir la compatibilité avec les infrastructures
+    réseau modernes qui déploient progressivement IPv6.
+  \item \textbf{Rate limiting avancé sur l'API EDR}~: le mécanisme de
+    rate limiting actuel doit être enrichi avec des politiques
+    différenciées par client, des limites ajustables dynamiquement et
+    une meilleure visibilité sur les quotas consommés via les endpoints
+    de monitoring.
+  \item \textbf{Dashboard Grafana prêt à l'emploi}~: le dashboard de
+    monitoring doit être importé automatiquement au déploiement, sans
+    intervention manuelle. Cela garantit que chaque instance déployée
+    dispose immédiatement d'une visibilité complète sur ses métriques.
+\end{enumerate}
+
+\section{Évolutions potentielles}
+
+Au-delà des améliorations immédiates, plusieurs évolutions
+architecturales et fonctionnelles ont été identifiées pour les phases
+ultérieures du projet. Ces évolutions répondent à des besoins plus
+ambitieux et nécessitent des investissements plus importants.
+
+\subsection{Déploiement Kubernetes (K3s)}
+
+La migration de Docker Compose vers Kubernetes représente l'évolution
+la plus significative de l'infrastructure. \textbf{K3s}, distribution
+Kubernetes légère de la CNCF, est particulièrement adapté aux petites
+infrastructures et aux environnements aux ressources limitées.
+
+Les avantages de cette migration sont nombreux~:
+
+\begin{itemize}
+  \item \textbf{Orchestration avancée}~: Kubernetes gère le cycle de vie
+    des conteneurs, les redémarrages automatiques et la répartition de
+    charge entre les nœuds.
+  \item \textbf{Auto-scaling}~: le nombre de réplicas de chaque service
+    peut s'ajuster automatiquement en fonction de la charge, ce qui
+    permet de faire face aux pics d'activité sans sur-allouer les
+    ressources.
+  \item \textbf{Rolling updates}~: les mises à jour sont appliquées
+    progressivement sans interruption de service. Kubernetes remplace
+    les pods un par un en vérifiant la santé de chaque nouvelle
+    instance.
+  \item \textbf{Self-healing}~: en cas de défaillance d'un conteneur ou
+    d'un nœud, Kubernetes le redémarre ou le remplace automatiquement
+    pour maintenir le niveau de service défini.
+\end{itemize}
+
+Cette migration présente néanmoins des défis notables~: la complexité
+opérationnelle est plus élevée, la courbe d'apprentissage pour l'équipe
+est significative, et la consommation de ressources est supérieure à
+celle de Docker Compose. Une phase de pré-production prolongée serait
+nécessaire pour valider la configuration avant la migration en
+production.
+
+\subsection{Authentification OAuth2 complète}
+
+Le système d'authentification actuel repose sur l'intégration GLPI avec
+un mécanisme de SSO propriétaire. Une évolution vers OAuth2 standard
+permettrait de supporter l'authentification via les fournisseurs
+d'identité majeurs~: Google, Microsoft et GitHub.
+
+Cette évolution apporterait plusieurs bénéfices~:
+
+\begin{itemize}
+  \item \textbf{Simplification de l'inscription}~: les nouveaux clients
+    peuvent créer un compte en quelques clics via leur fournisseur
+    d'identité existant, sans formulaire d'inscription.
+  \item \textbf{Réduction de la friction}~: la connexion est plus rapide
+    et plus sécurisée, avec des mécanismes de récupération de mot de
+    passe délégués au fournisseur.
+  \item \textbf{Complément à GLPI}~: OAuth2 ne remplace pas l'intégration
+    GLPI mais la complète. Le SSO GLPI conserve son rôle pour la
+    gestion des tickets et le support technique.
+\end{itemize}
+
+\subsection{SIEM (Wazuh / ELK)}
+
+L'intégration d'un \textbf{SIEM} (Security Information and Event
+Management) est une évolution naturelle pour un produit EDR. Le SIEM
+permet de corréler les événements de sécurité remontés par les agents
+avec d'autres sources de données, d'automatiser la détection de
+menaces complexes et de produire des rapports de conformité.
+
+Deux solutions open-source sont envisagées~:
+
+\begin{itemize}
+  \item \textbf{Wazuh}~: fork de l'OSSEC, Wazuh est une plateforme de
+    sécurité open-source mature qui intègre la détection d'intrusion
+    (HIDS), le monitoring d'intégrité de fichiers (FIM) et l'analyse
+    des vulnérabilités. Son tableau de bord Kibana offre une
+    visualisation complète des alertes de sécurité.
+  \item \textbf{ELK Stack} (Elasticsearch, Logstash, Kibana)~: solution
+    de référence pour la centralisation et l'analyse de logs.
+    Elasticsearch indexe les événements, Logstash les normalise et
+    Kibana permet l'exploration et la création de dashboards.
+\end{itemize}
+
+L'intégration d'un SIEM implique la définition de règles de détection
+personnalisées, adaptées aux menaces spécifiques auxquelles les clients
+LockBits sont exposés. Ces règles pourraient être partagées sous forme
+de package de détection open-source, contribuant ainsi à l'écosystème
+de la cybersécurité.
+
+\subsection{Interface d'administration web EDR}
+
+Le portail client actuel offre un tableau de bord orienté vers les
+besoins des clients finaux. Une interface d'administration dédiée à
+l'EDR est envisagée pour répondre aux besoins des équipes SOC (Security
+Operations Center).
+
+Cette interface permettrait de~:
+
+\begin{itemize}
+  \item Gérer les agents, leur déploiement et leur cycle de vie.
+  \item Visualiser les alertes de sécurité avec leur niveau de gravité
+    et leur statut.
+  \item Générer des rapports STIX exploitables par d'autres outils de
+    cybersécurité.
+  \item Configurer les politiques de détection et les règles de
+    réponse automatique.
+  \item Suivre en temps réel l'activité des endpoints protégés.
+\end{itemize}
+
+Cette interface viendrait en complément du dashboard client existant,
+offrant une séparation claire entre la vue client (statut de
+l'abonnement, tickets de support) et la vue administration (opérations
+de sécurité, analyses forensiques).
+
+\subsection{Tests de pénétration automatisés}
+
+La sécurité étant au cœur du produit LockBits, l'intégration de tests
+de pénétration automatisés dans la pipeline CI/CD est une évolution
+naturelle. L'objectif est de détecter les vulnérabilités avant qu'elles
+n'atteignent la production.
+
+Les axes d'automatisation envisagés sont~:
+
+\begin{itemize}
+  \item \textbf{Scans de vulnérabilités réguliers}~: au-delà de Trivy
+    déjà intégré pour les images Docker, des scans de code source avec
+    des outils comme Semgrep ou CodeQL permettraient de détecter les
+    failles logicielles (injections SQL, XSS, failles de sécurité).
+  \item \textbf{Tests d'intrusion automatisés}~: des outils comme OWASP
+    ZAP peuvent être intégrés à la pipeline pour réaliser des tests
+    d'intrusion sur les endpoints exposés, avec génération automatique
+    de rapports.
+  \item \textbf{Analyse de dépendances}~: Dependabot est déjà actif sur
+    les dépôts du projet, mais une analyse plus poussée des
+    dépendances avec un outil de type Snyk pourrait compléter la
+    couverture de sécurité.
+\end{itemize}
+
+\section{Améliorations continues}
+
+Au-delà des évolutions fonctionnelles et architecturales, la pérennité
+du projet LockBits repose sur une démarche d'amélioration continue.
+Cette section décrit les pratiques qui doivent être maintenues et
+renforcées tout au long du cycle de vie du logiciel.
+
+\textbf{Revue de code systématique.} Chaque modification du code source
+doit passer par une revue par au moins un autre membre de l'équipe. La
+revue vérifie la conformité aux normes de codage, la pertinence des
+tests associés et l'absence d'effets de bord. Les pull requests doivent
+rester de taille modérée pour faciliter la relecture.
+
+\textbf{Mise à jour des dépendances.} Les dépendances logicielles
+évoluent rapidement, et les correctifs de sécurité sont publiés
+régulièrement. L'outil Dependabot, déjà configuré sur les dépôts,
+propose automatiquement des mises à jour. L'équipe s'engage à les
+traiter dans un délai raisonnable, en particulier pour les correctifs
+de sécurité critiques.
+
+\textbf{Documentation vivante.} La documentation technique doit évoluer
+avec le logiciel. Chaque nouvelle fonctionnalité, chaque modification
+d'architecture et chaque changement de configuration doit être reflété
+dans les fichiers de documentation concernés. L'objectif est de
+maintenir un écart minimal entre le code et sa documentation, pour
+éviter que cette dernière ne devienne obsolète.
+
+\textbf{Monitoring des performances.} Les métriques de performance
+collectées par Prometheus et visualisées dans Grafana doivent être
+revues périodiquement. Des seuils d'alerte doivent être définis pour
+anticiper les dégradations avant qu'elles n'affectent les clients. Le
+temps de réponse de l'API EDR, l'utilisation mémoire des conteneurs et
+le nombre d'agents actifs sont les indicateurs clés à surveiller en
+priorité.
+
+Enfin, la veille technologique fait partie intégrante de la démarche
+d'amélioration continue. Le paysage de la cybersécurité évolue
+rapidement~: de nouvelles menaces apparaissent, de nouveaux outils
+s'imposent, et les bonnes pratiques se raffinent. L'équipe LockBits
+doit rester attentive à ces évolutions pour maintenir la pertinence et
+l'efficacité de sa solution face aux défis de sécurité de demain.

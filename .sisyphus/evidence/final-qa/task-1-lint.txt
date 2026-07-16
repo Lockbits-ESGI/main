@@ -1,0 +1,6 @@
+Task: T1 — PHP lint check
+Command: php -l site_lockbits/metrics.php
+Execution: docker run --rm -v $(pwd)/site_lockbits:/app php:8.2-cli php -l /app/metrics.php
+
+Result: No syntax errors detected in /app/metrics.php
+VERDICT: ✅ PASS

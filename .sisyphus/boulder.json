@@ -1,0 +1,50 @@
+{
+  "active_plan": "/Users/cleeryy/Documents/dev/school/main/.sisyphus/plans/site-metrics.md",
+  "started_at": "2026-07-02T20:07:44.550Z",
+  "session_ids": [
+    "ses_0e0db8e48ffercz3XLxJNhr0ti"
+  ],
+  "session_origins": {
+    "ses_0e0db8e48ffercz3XLxJNhr0ti": "direct"
+  },
+  "plan_name": "site-metrics",
+  "agent": "atlas",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Créer `site_lockbits/metrics.php` — endpoint Prometheus (PHP pur)",
+      "session_id": "ses_0db8b5f70ffeDxBR3KiMJUgfVS",
+      "agent": "Sisyphus-Junior",
+      "category": "unspecified-high",
+      "updated_at": "2026-07-02T20:12:59.710Z"
+    },
+    "todo:2": {
+      "task_key": "todo:2",
+      "task_label": "2",
+      "task_title": "Modifier `site_lockbits/Dockerfile` — marqueur `.lockbits_start`",
+      "session_id": "ses_0db86b754ffeHuyVc5VOktw4Jb",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-07-02T20:16:26.472Z"
+    },
+    "todo:3": {
+      "task_key": "todo:3",
+      "task_label": "3",
+      "task_title": "Modifier `site_lockbits/.htaccess` — exclure `/metrics` des règles de réécriture",
+      "session_id": "ses_0db83e14cffeHgtuHjf5inTmNm",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-07-02T20:19:24.298Z"
+    },
+    "todo:4": {
+      "task_key": "todo:4",
+      "task_label": "4",
+      "task_title": "Modifier `docker-compose.preprod.yml` — ajouter réseau `monitoring` à `site-web`",
+      "session_id": "ses_0db78edd5ffeDpHiU0yaD8SVMf",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-07-02T20:31:36.079Z"
+    }
+  }
+}

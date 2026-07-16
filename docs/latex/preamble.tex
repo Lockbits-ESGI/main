@@ -1,0 +1,246 @@
+% ==============================================================================
+% PREAMBULE — Dossier d'Architecture LockBits
+% ==============================================================================
+% Ce fichier contient tous les packages, styles, couleurs et configurations
+% nécessaires à la compilation du dossier d'architecture.
+% ==============================================================================
+
+\documentclass[12pt,a4paper,twoside]{report}
+
+% ==============================================================================
+% 1. PACKAGES DE BASE
+% ==============================================================================
+\usepackage[utf8]{inputenc}               % Encodage UTF-8
+\usepackage[T1]{fontenc}                  % Encodage des polices
+\usepackage[french]{babel}                % Typographie française
+\usepackage{textcomp}                     % Symboles supplémentaires
+\usepackage{csquotes}                     % Citations françaises
+
+% ==============================================================================
+% 2. MISE EN PAGE
+% ==============================================================================
+\usepackage[left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm, bindingoffset=0.5cm]{geometry}
+
+% ==============================================================================
+% 3. POLICES ET TYPOGRAPHIE
+% ==============================================================================
+\usepackage{titlesec}                     % Personnalisation des titres
+
+% ==============================================================================
+% 4. COULEURS
+% ==============================================================================
+\usepackage{xcolor}
+
+% Couleurs principales du projet
+\definecolor{primaryblue}{RGB}{0, 82, 136}
+\definecolor{accentorange}{RGB}{230, 126, 34}
+
+% Couleurs pour les listings de code
+\definecolor{codebg}{RGB}{245, 245, 245}
+\definecolor{codeframe}{RGB}{200, 200, 200}
+
+% Couleurs semaphoriques
+\definecolor{successgreen}{RGB}{39, 174, 96}
+\definecolor{warnyellow}{RGB}{241, 196, 15}
+\definecolor{errorred}{RGB}{192, 57, 43}
+\definecolor{infoblue}{RGB}{52, 152, 219}
+
+% ==============================================================================
+% 5. LISTINGS DE CODE
+% ==============================================================================
+\usepackage{listings}
+
+% Configuration globale des listings
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  extendedchars=true,
+  frame=single,
+  backgroundcolor=\color{codebg},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=5pt,
+  keywordstyle=\color{primaryblue}\bfseries,
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{accentorange},
+  showstringspaces=false,
+  tabsize=2,
+  captionpos=b,
+  % Support des caractères français dans le code
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {ë}{{\"e}}1
+           {à}{{\`a}}1 {â}{{\^a}}1 {ù}{{\`u}}1 {û}{{\^u}}1
+           {î}{{\^i}}1 {ï}{{\"i}}1 {ô}{{\^o}}1 {ö}{{\"o}}1
+           {ç}{{\c{c}}}1 {É}{{\'E}}1 {È}{{\`E}}1 {Ê}{{\^E}}1
+           {À}{{\`A}}1 {Â}{{\^A}}1 {Ù}{{\`U}}1 {Û}{{\^U}}1
+           {Î}{{\^I}}1 {Ô}{{\^O}}1 {Ç}{{\c{C}}}1
+           {€}{{\euro}}1
+           {°}{{\textdegree}}1
+}
+
+% Definition du langage YAML
+\lstdefinelanguage{yaml}{
+  keywords={true, false, null, y, n, yes, no, on, off},
+  keywordstyle=\color{primaryblue}\bfseries,
+  sensitive=false,
+  morecomment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]",
+}
+
+% Definition du langage Bash
+\lstdefinelanguage{dockerbash}{
+  language=bash,
+  keywords={sudo, docker, docker-compose, curl, cp, mkdir, rm, chmod, chown, echo, export, source, grep, sed, awk, cat, ls, cd, pwd, exit, if, then, else, fi, for, do, done, while, case, in, esac, function, return, local},
+  morecomment=[l]{\#},
+}
+
+% Definition du langage Docker Compose
+\lstdefinelanguage{dockercompose}{
+  keywords={services, volumes, networks, image, container_name, ports, environment, depends_on, volumes, networks, restart, build, context, dockerfile, command, entrypoint, healthcheck, test, interval, timeout, retries, start_period, pull_policy, logging, driver, options, labels, dns, dns_search, extra_hosts, cap_add, cap_drop, privileged, user, working_dir, expose, links, external, name, driver_opts, ipam, config, subnet, gateway},
+  keywordstyle=\color{primaryblue}\bfseries,
+  sensitive=false,
+  morecomment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]",
+}
+
+% ==============================================================================
+% 6. FIGURES ET TABLEAUX
+% ==============================================================================
+\usepackage{graphicx}                     % Inclusion d'images
+\usepackage{float}                        % Placement précis des flottants
+\usepackage{caption}                      % Personnalisation des légendes
+\usepackage{subcaption}                   % Sous-figures et sous-tableaux
+\usepackage{booktabs}                     % Tableaux professionnels
+\usepackage{tabularx}                     % Tableaux adaptatifs
+\usepackage{longtable}                    % Tableaux sur plusieurs pages
+\usepackage{lscape}                       % Pages en mode paysage
+
+% ==============================================================================
+% 7. MATHEMATIQUES
+% ==============================================================================
+\usepackage{amsmath}                      % Environnements mathématiques
+\usepackage{amssymb}                      % Symboles mathématiques
+
+% ==============================================================================
+% 8. SCHEMAS ET DIAGRAMMES (TikZ)
+% ==============================================================================
+\usepackage{tikz}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{fit}
+\usetikzlibrary{backgrounds}
+
+% ==============================================================================
+% 9. ENCADRES ET BOITES
+% ==============================================================================
+\usepackage{fancybox}                     % Boites avec bordures
+
+% -- Environnement infobox : encadre bleu pour informations ----------------
+\newenvironment{infobox}{%
+  \begin{center}
+  \begin{Sbox}
+  \begin{minipage}{0.9\textwidth}
+  \color{infoblue}
+  \textbf{Info :}\\
+}{%
+  \end{minipage}
+  \end{Sbox}
+  \setlength{\fboxsep}{10pt}
+  \colorbox{infoblue!10}{\TheSbox}
+  \end{center}
+}
+
+% -- Environnement warningbox : encadre jaune pour avertissements ----------
+\newenvironment{warningbox}{%
+  \begin{center}
+  \begin{Sbox}
+  \begin{minipage}{0.9\textwidth}
+  \color{warnyellow!80!black}
+  \textbf{Attention :}\\
+}{%
+  \end{minipage}
+  \end{Sbox}
+  \setlength{\fboxsep}{10pt}
+  \colorbox{warnyellow!15}{\TheSbox}
+  \end{center}
+}
+
+% ==============================================================================
+% 10. EN-TETES ET PIEDS DE PAGE
+% ==============================================================================
+\usepackage{fancyhdr}
+
+% Style fancy pour les pages de chapitre
+\fancypagestyle{fancy}{%
+  \fancyhf{}
+  \fancyhead[L]{\small\textcolor{gray}{LockBits -- Dossier d'Architecture}}
+  \fancyhead[R]{\small\textcolor{gray}{Projet Annuel 2025-2026}}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+% Style plain pour les pages de debut de chapitre
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+% Application du style fancy par defaut
+\pagestyle{fancy}
+
+% ==============================================================================
+% 11. FORMATAGE DES TITRES
+% ==============================================================================
+
+% Chapitre : huge, bold, primaryblue
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{primaryblue}}
+  {\chaptertitlename\ \thechapter}
+  {20pt}
+  {\Huge}
+
+% Section : Large, bold, primaryblue
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{primaryblue}}
+  {\thesection}
+  {1em}
+  {}
+
+% Sous-section : large, bold, primaryblue!80!black
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{primaryblue!80!black}}
+  {\thesubsection}
+  {1em}
+  {}
+
+% ==============================================================================
+% 12. LISTES
+% ==============================================================================
+\usepackage{enumitem}
+\setlist{nosep, leftmargin=2em}           % Listes compactes
+
+% ==============================================================================
+% 13. HYPERLIENS ET METADONNEES PDF
+% ==============================================================================
+\usepackage[hidelinks]{hyperref}
+
+\hypersetup{
+  pdftitle={Dossier d'Architecture -- LockBits},
+  pdfauthor={Clery A-Ferradou, Swann Kechar, Soltane Afellah, Quentin Labourdette},
+  pdfsubject={Architecture SI -- Projet Annuel ESGI 2025-2026},
+  pdfkeywords={EDR, Docker, FastAPI, PHP, Monitoring, CI/CD, Sécurité},
+  pdfcreator={LaTeX},
+  pdfproducer={pdflatex},
+  colorlinks=false,
+}
+
+% ==============================================================================
+% FIN DU PREAMBULE
+% ==============================================================================
+\endinput
